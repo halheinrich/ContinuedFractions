@@ -119,14 +119,3 @@ dotnet_diagnostic.IDE0290.severity = suggestion
 # Test method names use underscores by convention (Method_Condition_Result).
 [**/*Tests.cs]
 dotnet_diagnostic.CA1707.severity = none
-
-##############################################################################
-# Temporary suppressions — removed by the BigRational best-practice refactor
-# in the next commit. Tracked here so the hygiene baseline lands green.
-##############################################################################
-
-[ContinuedFractions/BigRational.cs]
-# CA2225: provide named-method alternates for operator overloads.
-dotnet_diagnostic.CA2225.severity = none
-# CA1305: use IFormatProvider in ToString.
-dotnet_diagnostic.CA1305.severity = none
