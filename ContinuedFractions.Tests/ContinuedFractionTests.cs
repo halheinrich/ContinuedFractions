@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace ContFrac_Lib.Tests;
+namespace ContinuedFractions.Tests;
 
 public class ContinuedFractionTests
 {

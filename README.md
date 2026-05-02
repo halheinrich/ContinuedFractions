@@ -1,11 +1,11 @@
-# ContFrac_Lib
+# ContinuedFractions
 
-A .NET 10 class library with an xUnit test project.
+A .NET 10 class library for exploring continued fractions, with an xUnit test project.
 
 ## Projects
 
-- `ContFrac_Lib` - main library
-- `ContFrac_Lib.Tests` - xUnit tests
+- `ContinuedFractions` - main library
+- `ContinuedFractions.Tests` - xUnit tests
 
 ## Build
 

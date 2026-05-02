@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace ContFrac_Lib;
+namespace ContinuedFractions;
 
 /// <summary>
 /// A simple continued fraction [a0; a1, a2, ...] where a0 is the integer part

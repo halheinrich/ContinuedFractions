@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="ContinuedFractions.Tests/ContinuedFractions.Tests.csproj" />
+  <Project Path="ContinuedFractions/ContinuedFractions.csproj" />
+</Solution>

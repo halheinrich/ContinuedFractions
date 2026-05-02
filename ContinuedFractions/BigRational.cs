@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace ContFrac_Lib;
+namespace ContinuedFractions;
 
 /// <summary>
 /// An exact rational number p/q with arbitrary-precision numerator and

@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ContFrac_Lib\ContFrac_Lib.csproj" />
+    <ProjectReference Include="..\ContinuedFractions\ContinuedFractions.csproj" />
   </ItemGroup>
 
 </Project>
