@@ -21,9 +21,13 @@
   </PropertyGroup>
 
   <!--
-    Documentation generation is enabled per-project (library only, not tests)
-    once the public surface stabilizes. Until then it is off to avoid noisy
-    CS1591 errors during the API refactor.
+    Generate XML documentation by default. Test projects opt out by
+    setting <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    in their csproj. (We can't gate this on $(IsPackable) here because
+    the SDK locks in its decision before Directory.Build.targets runs.)
   -->
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
 
 </Project>

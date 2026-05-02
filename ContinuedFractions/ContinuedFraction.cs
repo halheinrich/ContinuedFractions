@@ -125,6 +125,10 @@ public sealed class ContinuedFraction : IEquatable<ContinuedFraction>, IFormatta
         return hash.ToHashCode();
     }
 
+    /// <summary>
+    /// Returns true when both operands are null, or both are non-null and
+    /// have equal coefficient sequences.
+    /// </summary>
     public static bool operator ==(ContinuedFraction? left, ContinuedFraction? right)
     {
         if (ReferenceEquals(left, right))
@@ -134,6 +138,7 @@ public sealed class ContinuedFraction : IEquatable<ContinuedFraction>, IFormatta
         return left is not null && left.Equals(right);
     }
 
+    /// <summary>Returns the negation of <c>operator ==</c>.</summary>
     public static bool operator !=(ContinuedFraction? left, ContinuedFraction? right)
         => !(left == right);
 

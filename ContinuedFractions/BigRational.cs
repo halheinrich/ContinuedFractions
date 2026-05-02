@@ -107,26 +107,39 @@ public readonly struct BigRational
     public static BigRational FromInt32(int value)
         => new(value, BigInteger.One);
 
+    /// <summary>Converts a <see cref="BigInteger"/> to a <see cref="BigRational"/>.</summary>
     public static explicit operator BigRational(BigInteger value) => FromBigInteger(value);
+
+    /// <summary>Converts a <see cref="long"/> to a <see cref="BigRational"/>.</summary>
     public static explicit operator BigRational(long value) => FromInt64(value);
+
+    /// <summary>Converts an <see cref="int"/> to a <see cref="BigRational"/>.</summary>
     public static explicit operator BigRational(int value) => FromInt32(value);
 
     // ---------- arithmetic ----------
 
+    /// <summary>Returns the sum of two rationals.</summary>
     public static BigRational operator +(BigRational left, BigRational right)
         => new(left.Numerator * right.Denominator + right.Numerator * left.Denominator,
                left.Denominator * right.Denominator);
 
+    /// <summary>Returns the difference <paramref name="left"/> - <paramref name="right"/>.</summary>
     public static BigRational operator -(BigRational left, BigRational right)
         => new(left.Numerator * right.Denominator - right.Numerator * left.Denominator,
                left.Denominator * right.Denominator);
 
+    /// <summary>Returns the additive inverse of <paramref name="value"/>.</summary>
     public static BigRational operator -(BigRational value)
         => new(-value.Numerator, value.Denominator);
 
+    /// <summary>Returns the product of two rationals.</summary>
     public static BigRational operator *(BigRational left, BigRational right)
         => new(left.Numerator * right.Numerator, left.Denominator * right.Denominator);
 
+    /// <summary>
+    /// Returns the quotient <paramref name="left"/> / <paramref name="right"/>.
+    /// </summary>
+    /// <exception cref="DivideByZeroException"><paramref name="right"/> is zero.</exception>
     public static BigRational operator /(BigRational left, BigRational right)
     {
         if (right.Numerator.IsZero)
@@ -153,15 +166,20 @@ public readonly struct BigRational
 
     // ---------- equality ----------
 
+    /// <inheritdoc/>
     public bool Equals(BigRational other)
         => Numerator == other.Numerator && Denominator == other.Denominator;
 
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => obj is BigRational r && Equals(r);
 
+    /// <inheritdoc/>
     public override int GetHashCode() => HashCode.Combine(Numerator, Denominator);
 
+    /// <summary>Returns true when two rationals are equal.</summary>
     public static bool operator ==(BigRational left, BigRational right) => left.Equals(right);
 
+    /// <summary>Returns true when two rationals are not equal.</summary>
     public static bool operator !=(BigRational left, BigRational right) => !left.Equals(right);
 
     // ---------- comparison ----------
@@ -173,6 +191,7 @@ public readonly struct BigRational
     public int CompareTo(BigRational other)
         => (Numerator * other.Denominator).CompareTo(other.Numerator * Denominator);
 
+    /// <inheritdoc/>
     public int CompareTo(object? obj)
     {
         if (obj is null)
@@ -186,9 +205,16 @@ public readonly struct BigRational
         throw new ArgumentException("Object is not a BigRational.", nameof(obj));
     }
 
+    /// <summary>Returns true when <paramref name="left"/> is strictly less than <paramref name="right"/>.</summary>
     public static bool operator <(BigRational left, BigRational right) => left.CompareTo(right) < 0;
+
+    /// <summary>Returns true when <paramref name="left"/> is less than or equal to <paramref name="right"/>.</summary>
     public static bool operator <=(BigRational left, BigRational right) => left.CompareTo(right) <= 0;
+
+    /// <summary>Returns true when <paramref name="left"/> is strictly greater than <paramref name="right"/>.</summary>
     public static bool operator >(BigRational left, BigRational right) => left.CompareTo(right) > 0;
+
+    /// <summary>Returns true when <paramref name="left"/> is greater than or equal to <paramref name="right"/>.</summary>
     public static bool operator >=(BigRational left, BigRational right) => left.CompareTo(right) >= 0;
 
     // ---------- formatting ----------
