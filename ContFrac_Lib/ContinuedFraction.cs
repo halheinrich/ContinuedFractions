@@ -1,3 +1,5 @@
+using System.Numerics;
+
 namespace ContFrac_Lib;
 
 /// <summary>
@@ -6,19 +8,19 @@ namespace ContFrac_Lib;
 /// </summary>
 public sealed class ContinuedFraction
 {
-    public IReadOnlyList<long> Coefficients { get; }
+    public IReadOnlyList<BigInteger> Coefficients { get; }
 
-    public ContinuedFraction(IEnumerable<long> coefficients)
+    public ContinuedFraction(IEnumerable<BigInteger> coefficients)
     {
         ArgumentNullException.ThrowIfNull(coefficients);
         var list = coefficients.ToArray();
         if (list.Length == 0)
             throw new ArgumentException("At least one coefficient is required.", nameof(coefficients));
         for (int i = 1; i < list.Length; i++)
-            if (list[i] <= 0)
+            if (list[i].Sign <= 0)
                 throw new ArgumentException($"Partial quotient a{i} must be positive.", nameof(coefficients));
         Coefficients = list;
     }
 
-    public ContinuedFraction(params long[] coefficients) : this((IEnumerable<long>)coefficients) { }
+    public ContinuedFraction(params BigInteger[] coefficients) : this((IEnumerable<BigInteger>)coefficients) { }
 }
