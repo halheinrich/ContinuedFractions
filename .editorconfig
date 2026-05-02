@@ -117,5 +117,9 @@ dotnet_diagnostic.IDE0290.severity = suggestion
 
 # CA1707: Identifiers should not contain underscores.
 # Test method names use underscores by convention (Method_Condition_Result).
+# CA1508: Avoid dead conditional code.
+# Tests intentionally exercise trivially-true / trivially-false conditions
+# to verify operator and method behavior under known inputs.
 [**/*Tests.cs]
 dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.CA1508.severity = none
