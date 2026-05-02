@@ -18,4 +18,8 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ContFrac_Lib\ContFrac_Lib.csproj" />
+  </ItemGroup>
+
 </Project>
