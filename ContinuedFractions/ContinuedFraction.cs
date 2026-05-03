@@ -1,23 +1,47 @@
+using System.Collections;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Numerics;
 using System.Text;
+using HalHeinrich.Numerics;
 
 namespace ContinuedFractions;
 
 /// <summary>
-/// A finite simple continued fraction <c>[a0; a1, a2, ...]</c> where
-/// <c>a0</c> is the integer part (any sign) and <c>a1, a2, ...</c> are
-/// strictly positive partial quotients.
+/// A simple continued fraction <c>[a0; a1, a2, ...]</c> where <c>a0</c> is
+/// the integer part (any sign) and <c>a1, a2, ...</c> are strictly positive
+/// partial quotients. May be finite (representing a rational) or unbounded
+/// (representing an irrational).
 /// </summary>
 /// <remarks>
-/// Instances are immutable. Two continued fractions are equal when their
-/// coefficient sequences are equal element-by-element; canonicalization
-/// (e.g. the [..., a, 1] vs [..., a+1] identity) is not performed here.
+/// <para>
+/// Iterating an instance yields successive convergents <c>p_n / q_n</c>
+/// as <see cref="BigRational"/> values. Convergents are memoized
+/// internally — repeated indexer access or re-iteration is cheap.
+/// </para>
+/// <para>
+/// For unbounded continued fractions iteration runs indefinitely; the
+/// consumer is responsible for terminating via <c>Take</c>, <c>break</c>,
+/// or a convergence check.
+/// </para>
+/// <para>Instances are not thread-safe.</para>
 /// </remarks>
-public sealed class ContinuedFraction : IEquatable<ContinuedFraction>, IFormattable
+public sealed class ContinuedFraction
+    : IEquatable<ContinuedFraction>, IFormattable, IEnumerable<BigRational>
 {
     private readonly CFCoefficientGenerator _generator;
+
+    // Memoized convergents and recurrence state. The recurrence is
+    //   p_{-1} = 1, p_{-2} = 0
+    //   q_{-1} = 0, q_{-2} = 1
+    //   p_n = a_n * p_{n-1} + p_{n-2}
+    //   q_n = a_n * q_{n-1} + q_{n-2}
+    // and the convergent at depth n is p_n / q_n.
+    private readonly List<BigRational> _convergents = [];
+    private BigInteger _pPrev = BigInteger.One;
+    private BigInteger _pPrevPrev = BigInteger.Zero;
+    private BigInteger _qPrev = BigInteger.Zero;
+    private BigInteger _qPrevPrev = BigInteger.One;
 
     /// <summary>The coefficient sequence <c>[a0, a1, a2, ...]</c>.</summary>
     /// <exception cref="InvalidOperationException">
@@ -106,6 +130,99 @@ public sealed class ContinuedFraction : IEquatable<ContinuedFraction>, IFormatta
     /// fractions of length &gt; 1 are not either.
     /// </summary>
     public bool IsInteger => _generator.Length == 1;
+
+    // ---------- convergents ----------
+
+    /// <summary>
+    /// The convergent at the given <paramref name="depth"/> — the rational
+    /// value <c>p_depth / q_depth</c> formed by truncating the continued
+    /// fraction at that index.
+    /// </summary>
+    /// <param name="depth">Zero-based depth at which to evaluate.</param>
+    /// <returns>The depth-th convergent.</returns>
+    /// <remarks>
+    /// First access at a given depth costs O(depth) <see cref="BigInteger"/>
+    /// ops past the existing cache; subsequent accesses are O(1).
+    /// </remarks>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="depth"/> is negative, or — for a finite continued
+    /// fraction — greater than or equal to the generator's length.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Computing the convergent required pulling a partial quotient
+    /// <c>a_n</c> with <c>n ≥ 1</c> that was non-positive, violating the
+    /// CF invariant.
+    /// </exception>
+    public BigRational this[int depth]
+    {
+        get
+        {
+            ArgumentOutOfRangeException.ThrowIfNegative(depth);
+            if (_generator.Length is int n && depth >= n)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(depth),
+                    depth,
+                    $"Depth must be less than the generator's length ({n.ToString(CultureInfo.InvariantCulture)}).");
+            }
+
+            EnsureComputedThrough(depth);
+            return _convergents[depth];
+        }
+    }
+
+    /// <summary>
+    /// Yields successive convergents <c>p_0/q_0, p_1/q_1, p_2/q_2, …</c>.
+    /// </summary>
+    /// <remarks>
+    /// For finite continued fractions iteration completes after the last
+    /// coefficient. For unbounded continued fractions iteration runs
+    /// indefinitely — the consumer must terminate via <c>Take</c>,
+    /// <c>break</c>, or a convergence check.
+    /// </remarks>
+    public IEnumerator<BigRational> GetEnumerator()
+    {
+        var length = _generator.Length;
+        var i = 0;
+        while (length is null || i < length.Value)
+        {
+            EnsureComputedThrough(i);
+            yield return _convergents[i];
+            i++;
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    /// <summary>
+    /// Extends the convergent cache to at least <paramref name="depth"/> + 1
+    /// entries, pulling and validating new partial quotients from the
+    /// generator as needed.
+    /// </summary>
+    private void EnsureComputedThrough(int depth)
+    {
+        while (_convergents.Count <= depth)
+        {
+            var n = _convergents.Count;
+            var an = _generator[n];
+
+            if (n >= 1 && an.Sign <= 0)
+            {
+                throw new InvalidOperationException(
+                    $"Partial quotient a{n.ToString(CultureInfo.InvariantCulture)} " +
+                    $"must be positive (got {an.ToString(CultureInfo.InvariantCulture)}).");
+            }
+
+            var pn = an * _pPrev + _pPrevPrev;
+            var qn = an * _qPrev + _qPrevPrev;
+            _convergents.Add(new BigRational(pn, qn));
+
+            _pPrevPrev = _pPrev;
+            _pPrev = pn;
+            _qPrevPrev = _qPrev;
+            _qPrev = qn;
+        }
+    }
 
     private static ReadOnlyCollection<BigInteger> ValidateAndFreeze(
         IEnumerable<BigInteger> coefficients)
