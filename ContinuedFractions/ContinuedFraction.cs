@@ -17,8 +17,10 @@ namespace ContinuedFractions;
 /// </remarks>
 public sealed class ContinuedFraction : IEquatable<ContinuedFraction>, IFormattable
 {
+    private readonly ListCFCoefficientGenerator _generator;
+
     /// <summary>The coefficient sequence <c>[a0, a1, a2, ...]</c>.</summary>
-    public IReadOnlyList<BigInteger> Coefficients { get; }
+    public IReadOnlyList<BigInteger> Coefficients => _generator.Items;
 
     /// <summary>
     /// Constructs a continued fraction from its coefficient sequence.
@@ -36,7 +38,7 @@ public sealed class ContinuedFraction : IEquatable<ContinuedFraction>, IFormatta
     /// </exception>
     public ContinuedFraction(IEnumerable<BigInteger> coefficients)
     {
-        Coefficients = ValidateAndFreeze(coefficients);
+        _generator = new ListCFCoefficientGenerator(ValidateAndFreeze(coefficients));
     }
 
     /// <inheritdoc cref="ContinuedFraction(IEnumerable{BigInteger})"/>
