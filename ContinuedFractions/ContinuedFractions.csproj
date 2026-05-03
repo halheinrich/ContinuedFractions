@@ -1,3 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <ItemGroup>
+    <PackageReference Include="HalHeinrich.Numerics.BigRational" Version="0.1.0-preview1" />
+  </ItemGroup>
+
 </Project>

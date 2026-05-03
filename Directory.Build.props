@@ -30,4 +30,16 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
+  <!--
+    Lock-file based version pinning. The lock file (packages.lock.json)
+    captures exactly the resolved package versions and is committed to git,
+    so any clone restores the same dependency graph. RestoreLockedMode
+    fails the build if the lock file is out of sync with the csproj — only
+    enabled in CI so local `dotnet add package` keeps working.
+  -->
+  <PropertyGroup>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <RestoreLockedMode Condition="'$(ContinuousIntegrationBuild)' == 'true'">true</RestoreLockedMode>
+  </PropertyGroup>
+
 </Project>
