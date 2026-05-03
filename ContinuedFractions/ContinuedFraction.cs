@@ -17,10 +17,26 @@ namespace ContinuedFractions;
 /// </remarks>
 public sealed class ContinuedFraction : IEquatable<ContinuedFraction>, IFormattable
 {
-    private readonly ListCFCoefficientGenerator _generator;
+    private readonly CFCoefficientGenerator _generator;
 
     /// <summary>The coefficient sequence <c>[a0, a1, a2, ...]</c>.</summary>
-    public IReadOnlyList<BigInteger> Coefficients => _generator.Items;
+    /// <exception cref="InvalidOperationException">
+    /// The continued fraction is not backed by an explicit coefficient
+    /// list. Use <see cref="Generator"/> for generator-based access.
+    /// </exception>
+    public IReadOnlyList<BigInteger> Coefficients =>
+        _generator is ListCFCoefficientGenerator lg
+            ? lg.Items
+            : throw new InvalidOperationException(
+                "Coefficients is only available for list-backed continued " +
+                "fractions; use the Generator property for generator-based access.");
+
+    /// <summary>
+    /// The underlying coefficient generator. Iterate or index this for
+    /// access to the partial quotients of any continued fraction,
+    /// regardless of how it was constructed.
+    /// </summary>
+    public CFCoefficientGenerator Generator => _generator;
 
     /// <summary>
     /// Constructs a continued fraction from its coefficient sequence.
@@ -47,14 +63,49 @@ public sealed class ContinuedFraction : IEquatable<ContinuedFraction>, IFormatta
     {
     }
 
+    /// <summary>
+    /// Constructs a continued fraction backed by a coefficient generator.
+    /// </summary>
+    /// <param name="generator">
+    /// The source of partial quotients. Must yield at least one
+    /// coefficient (i.e. its <see cref="CFCoefficientGenerator.Length"/>
+    /// is either <see langword="null"/> — unbounded — or at least 1).
+    /// </param>
+    /// <remarks>
+    /// CF invariants on partial-quotient values
+    /// (<c>a_i</c> strictly positive for <c>i ≥ 1</c>) are not validated
+    /// at construction; they are checked lazily when the generator is
+    /// consumed by convergent computation.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="generator"/> is null.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="generator"/> has <see cref="CFCoefficientGenerator.Length"/> 0.
+    /// </exception>
+    public ContinuedFraction(CFCoefficientGenerator generator)
+    {
+        ArgumentNullException.ThrowIfNull(generator);
+        if (generator.Length is 0)
+        {
+            throw new ArgumentException(
+                "Generator must yield at least one coefficient.",
+                nameof(generator));
+        }
+
+        _generator = generator;
+    }
+
     /// <summary>The integer part a0 of the continued fraction.</summary>
-    public BigInteger IntegerPart => Coefficients[0];
+    public BigInteger IntegerPart => _generator[0];
 
     /// <summary>
-    /// True when the continued fraction has only an integer part (no partial
-    /// quotients).
+    /// True when the continued fraction is finite with exactly one
+    /// coefficient (i.e. it represents an integer). Unbounded
+    /// continued fractions are never integers; finite continued
+    /// fractions of length &gt; 1 are not either.
     /// </summary>
-    public bool IsInteger => Coefficients.Count == 1;
+    public bool IsInteger => _generator.Length == 1;
 
     private static ReadOnlyCollection<BigInteger> ValidateAndFreeze(
         IEnumerable<BigInteger> coefficients)
