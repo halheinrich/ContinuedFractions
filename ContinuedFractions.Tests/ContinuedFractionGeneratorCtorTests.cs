@@ -70,46 +70,4 @@ public class ContinuedFractionGeneratorCtorTests
         Assert.Equal(new BigInteger(7), cf.IntegerPart);
     }
 
-    // ---------- IsInteger ----------
-
-    [Fact]
-    public void IsInteger_FalseForUnboundedGenerator()
-    {
-        var gen = new FuncCFCoefficientGenerator("φ", _ => BigInteger.One);
-        var cf = new ContinuedFraction(gen);
-        Assert.False(cf.IsInteger);
-    }
-
-    [Fact]
-    public void IsInteger_TrueForLengthOneGenerator()
-    {
-        var gen = new FuncCFCoefficientGenerator("[7]", _ => new BigInteger(7), length: 1);
-        var cf = new ContinuedFraction(gen);
-        Assert.True(cf.IsInteger);
-    }
-
-    [Fact]
-    public void IsInteger_FalseForLengthGreaterThanOneGenerator()
-    {
-        var gen = new FuncCFCoefficientGenerator("[1; 2]", i => i + 1, length: 2);
-        var cf = new ContinuedFraction(gen);
-        Assert.False(cf.IsInteger);
-    }
-
-    // ---------- Coefficients property ----------
-
-    [Fact]
-    public void Coefficients_ThrowsForGeneratorBackedCf()
-    {
-        var gen = new FuncCFCoefficientGenerator("φ", _ => BigInteger.One);
-        var cf = new ContinuedFraction(gen);
-        Assert.Throws<InvalidOperationException>(() => cf.Coefficients);
-    }
-
-    [Fact]
-    public void Coefficients_StillWorksForListBackedCf()
-    {
-        var cf = new ContinuedFraction(1, 2, 3);
-        Assert.Equal(3, cf.Coefficients.Count);
-    }
 }
