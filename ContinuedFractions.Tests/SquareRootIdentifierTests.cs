@@ -1,5 +1,6 @@
 using System.Numerics;
 using ContinuedFractions.Generators;
+using HalHeinrich.Numerics;
 
 namespace ContinuedFractions.Tests;
 
@@ -143,5 +144,60 @@ public class SquareRootIdentifierTests
 
         Assert.False(result.Match);
         Assert.Equal(1, result.Depth);  // last convergent index for length-2 CF
+    }
+
+    // ---------- tolerance ----------
+
+    [Fact]
+    public void DefaultTolerance_IsOneInOneMillion()
+    {
+        Assert.Equal(new BigRational(1, 1_000_000), SquareRootIdentifier.DefaultTolerance);
+    }
+
+    [Fact]
+    public void Constructor_RejectsZeroTolerance()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new SquareRootIdentifier(tolerance: new BigRational(0, 1)));
+    }
+
+    [Fact]
+    public void Constructor_RejectsNegativeTolerance()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new SquareRootIdentifier(tolerance: new BigRational(-1, 100)));
+    }
+
+    [Fact]
+    public void TryIdentify_TighterToleranceMatchesAtGreaterDepth()
+    {
+        var cf1 = new ContinuedFraction(new Sqrt2());
+        var cf2 = new ContinuedFraction(new Sqrt2());
+
+        var loose = new SquareRootIdentifier(tolerance: new BigRational(1, 1_000));
+        var tight = new SquareRootIdentifier(tolerance: new BigRational(1, 1_000_000_000));
+
+        var looseResult = loose.TryIdentify(cf1);
+        var tightResult = tight.TryIdentify(cf2);
+
+        Assert.True(looseResult.Match);
+        Assert.True(tightResult.Match);
+        Assert.True(
+            tightResult.Depth > looseResult.Depth,
+            $"tight depth {tightResult.Depth} should exceed loose depth {looseResult.Depth}");
+    }
+
+    [Fact]
+    public void TryIdentify_VeryTightToleranceMissesWithinSmallBudget()
+    {
+        // 10⁻³⁰ — far beyond what 10 convergents of √2 can deliver
+        var tightId = new SquareRootIdentifier(
+            maxDepth: 10,
+            tolerance: new BigRational(1, BigInteger.Pow(10, 30)));
+        var cf = new ContinuedFraction(new Sqrt2());
+
+        var result = tightId.TryIdentify(cf);
+        Assert.False(result.Match);
+        Assert.Equal(10, result.Depth);
     }
 }

@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Numerics;
+using HalHeinrich.Numerics;
 
 namespace ContinuedFractions;
 
@@ -9,22 +10,29 @@ namespace ContinuedFractions;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Strategy: walk the convergents <c>p_k / q_k</c>. At each step,
-/// take the nearest integer to <c>(p_k / q_k)²</c> as the candidate
-/// <c>n</c>, then check the Pell-like residual
-/// <c>|p_k² − n·q_k²|</c>. For genuine convergents of √n classical CF
-/// theory gives <c>|p_k² − n·q_k²| &lt; 2√n</c> at every depth, which
-/// we test in pure integer arithmetic via the equivalent squared
-/// inequality <c>residual² &lt; 4n</c>. Non-square-root irrationals
-/// fail this bound after a few convergents at most.
+/// Strategy: walk the convergents <c>p_k / q_k</c>. At each step, take
+/// the nearest integer to <c>(p_k / q_k)²</c> as the candidate
+/// <c>n</c>, then check whether the convergent's square is within
+/// <c>tolerance</c> of <c>n</c>:
+/// <c>|(p_k / q_k)² − n| &lt; tolerance</c>. For genuine convergents
+/// of √n this distance shrinks toward zero as <c>q_k</c> grows, so the
+/// tolerance check is eventually satisfied. Non-square-root
+/// irrationals don't approach any integer square, so the check fails.
 /// </para>
 /// <para>
 /// A match is reported when the candidate <c>n</c> stays the same
 /// across <see cref="RequiredStableDepth"/> consecutive convergents
-/// that all pass the residual bound. The default budget of
-/// <see cref="DefaultMaxDepth"/> convergents is ample for any
-/// practical √n; even sluggish cases like √2 reach stability by
-/// depth 3.
+/// that all pass the tolerance check. Stability protects against
+/// spurious early matches — e.g. the depth-0 convergent is always an
+/// integer and trivially satisfies any positive tolerance for
+/// <c>n = a₀²</c>.
+/// </para>
+/// <para>
+/// Tighter tolerances require deeper convergents to confirm: with the
+/// default <see cref="DefaultTolerance"/> of <c>10⁻⁶</c>, √2 matches
+/// near depth 11; tightening to <c>10⁻⁹</c> pushes that out to roughly
+/// depth 16. The default budget of <see cref="DefaultMaxDepth"/>
+/// convergents is comfortable for any practical √n at this tolerance.
 /// </para>
 /// <para>
 /// Finite continued fractions (representing rationals) almost never
@@ -41,24 +49,42 @@ public sealed class SquareRootIdentifier : CFIdentifier
 
     /// <summary>
     /// Number of consecutive convergents that must agree on the
-    /// candidate <c>n</c> (and pass the residual bound) before the
+    /// candidate <c>n</c> (and pass the tolerance check) before the
     /// match is accepted.
     /// </summary>
     public const int RequiredStableDepth = 3;
 
+    /// <summary>
+    /// Default tolerance for the convergent-square-distance check:
+    /// <c>10⁻⁶</c> (one part per million).
+    /// </summary>
+    public static readonly BigRational DefaultTolerance = new(1, 1_000_000);
+
     private readonly int _maxDepth;
+    private readonly BigInteger _toleranceNum;
+    private readonly BigInteger _toleranceDen;
 
     /// <summary>
-    /// Constructs an identifier with the given convergent budget.
+    /// Constructs an identifier with the given convergent budget and
+    /// match tolerance.
     /// </summary>
     /// <param name="maxDepth">
     /// Maximum convergent depth to examine before giving up.
     /// </param>
+    /// <param name="tolerance">
+    /// The maximum permitted distance between a convergent's square
+    /// and its rounded integer for the convergent to count as evidence
+    /// of the match. <see langword="null"/> uses
+    /// <see cref="DefaultTolerance"/> (10⁻⁶). Must be strictly positive.
+    /// </param>
     /// <exception cref="ArgumentOutOfRangeException">
     /// <paramref name="maxDepth"/> is less than
-    /// <see cref="RequiredStableDepth"/>.
+    /// <see cref="RequiredStableDepth"/>, or
+    /// <paramref name="tolerance"/> is non-positive.
     /// </exception>
-    public SquareRootIdentifier(int maxDepth = DefaultMaxDepth)
+    public SquareRootIdentifier(
+        int maxDepth = DefaultMaxDepth,
+        BigRational? tolerance = null)
     {
         if (maxDepth < RequiredStableDepth)
         {
@@ -68,7 +94,18 @@ public sealed class SquareRootIdentifier : CFIdentifier
                 $"Maximum depth must be at least {RequiredStableDepth.ToString(CultureInfo.InvariantCulture)}.");
         }
 
+        var t = tolerance ?? DefaultTolerance;
+        if (t.Numerator.Sign <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(tolerance),
+                t,
+                "Tolerance must be strictly positive.");
+        }
+
         _maxDepth = maxDepth;
+        _toleranceNum = t.Numerator;
+        _toleranceDen = t.Denominator;
     }
 
     /// <inheritdoc/>
@@ -95,16 +132,15 @@ public sealed class SquareRootIdentifier : CFIdentifier
                 n += BigInteger.One;
             }
 
-            // Reject non-positive candidates and overly-large residuals.
-            // For genuine √n convergents |p² − n·q²| < 2√n strictly
-            // (classical Pell bound). We check the equivalent squared
-            // inequality residual² < 4n, keeping everything in integer
-            // arithmetic.
+            // Tolerance check: |p² − n·q²| / q² < tolNum / tolDen.
+            // Cross-multiplied (q² > 0, tolDen > 0):
+            //     |p² − n·q²| · tolDen < tolNum · q²
+            // — pure integer arithmetic, exact.
             var keep = false;
             if (n.Sign > 0)
             {
-                var residual = p2 - n * q2;
-                if (residual * residual < 4 * n)
+                var residualAbs = BigInteger.Abs(p2 - n * q2);
+                if (residualAbs * _toleranceDen < _toleranceNum * q2)
                 {
                     keep = true;
                 }
