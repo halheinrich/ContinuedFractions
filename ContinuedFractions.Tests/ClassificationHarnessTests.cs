@@ -25,7 +25,7 @@ public class ClassificationHarnessTests
         // (or null if no current identifier should match).
         var cases = new (string Label, ContinuedFraction Cf, string? ExpectedIdentification)[]
         {
-            ("φ",          new ContinuedFraction(new Phi()),          null),
+            ("φ",          new ContinuedFraction(new Phi()),          "(√5 + 1)/2"),
             ("√2",         new ContinuedFraction(new Sqrt2()),        "√2"),
             ("e",          new ContinuedFraction(new EulersNumber()), null),
             ("√5",
@@ -39,7 +39,7 @@ public class ClassificationHarnessTests
         // Available identifiers, evaluated in order.
         var identifiers = new CFIdentifier[]
         {
-            new SquareRootIdentifier(),
+            new QuadraticIrrationalIdentifier(),
             // Future identifiers (rational-multiple-of-e, periodic-CF, ...)
             // would slot in here.
         };
