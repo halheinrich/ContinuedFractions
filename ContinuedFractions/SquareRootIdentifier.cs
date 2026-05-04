@@ -12,9 +12,11 @@ namespace ContinuedFractions;
 /// Strategy: walk the convergents <c>p_k / q_k</c>. At each step,
 /// take the nearest integer to <c>(p_k / q_k)²</c> as the candidate
 /// <c>n</c>, then check the Pell-like residual
-/// <c>|p_k² − n·q_k²|</c>. For genuine convergents of √n the residual
-/// is bounded by <c>2√n + 1</c> at every depth — non-square-root
-/// irrationals fail this bound after a few convergents at most.
+/// <c>|p_k² − n·q_k²|</c>. For genuine convergents of √n classical CF
+/// theory gives <c>|p_k² − n·q_k²| &lt; 2√n</c> at every depth, which
+/// we test in pure integer arithmetic via the equivalent squared
+/// inequality <c>residual² &lt; 4n</c>. Non-square-root irrationals
+/// fail this bound after a few convergents at most.
 /// </para>
 /// <para>
 /// A match is reported when the candidate <c>n</c> stays the same
@@ -94,15 +96,15 @@ public sealed class SquareRootIdentifier : CFIdentifier
             }
 
             // Reject non-positive candidates and overly-large residuals.
-            // For genuine √n convergents the residual is bounded by
-            // 2√n + 1 at every depth; we use 2·⌊√n⌋ + 2 as a safe
-            // integer upper bound.
+            // For genuine √n convergents |p² − n·q²| < 2√n strictly
+            // (classical Pell bound). We check the equivalent squared
+            // inequality residual² < 4n, keeping everything in integer
+            // arithmetic.
             var keep = false;
             if (n.Sign > 0)
             {
-                var residual = BigInteger.Abs(p2 - n * q2);
-                var bound = (2 * IntegerSqrt(n)) + 2;
-                if (residual <= bound)
+                var residual = p2 - n * q2;
+                if (residual * residual < 4 * n)
                 {
                     keep = true;
                 }
@@ -138,31 +140,5 @@ public sealed class SquareRootIdentifier : CFIdentifier
 
         // Iterator completed naturally (finite CF) without reaching stability.
         return IdentificationResult.NotMatched(Math.Max(depth, 0));
-    }
-
-    /// <summary>
-    /// Returns <c>⌊√n⌋</c> for non-negative <paramref name="n"/> via
-    /// Newton's method on <see cref="BigInteger"/>.
-    /// </summary>
-    private static BigInteger IntegerSqrt(BigInteger n)
-    {
-        if (n.Sign < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(n), n, "n must be non-negative.");
-        }
-        if (n < 2)
-        {
-            return n;
-        }
-
-        // Initial estimate: any value ≥ ⌈√n⌉. Start with n itself; Newton converges quickly.
-        var x = n;
-        var y = (x + 1) / 2;
-        while (y < x)
-        {
-            x = y;
-            y = (x + (n / x)) / 2;
-        }
-        return x;
     }
 }
