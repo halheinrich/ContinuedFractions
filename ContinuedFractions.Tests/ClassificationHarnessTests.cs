@@ -1,5 +1,6 @@
 using System.Numerics;
 using ContinuedFractions.Generators;
+using Xunit.Abstractions;
 
 namespace ContinuedFractions.Tests;
 
@@ -10,6 +11,13 @@ namespace ContinuedFractions.Tests;
 /// </summary>
 public class ClassificationHarnessTests
 {
+    private readonly ITestOutputHelper _output;
+
+    public ClassificationHarnessTests(ITestOutputHelper output)
+    {
+        _output = output;
+    }
+
     [Fact]
     public void Harness_ClassifiesEachCfWithFirstMatchingIdentifier()
     {
@@ -36,22 +44,40 @@ public class ClassificationHarnessTests
             // would slot in here.
         };
 
+        _output.WriteLine(
+            $"Classification harness — {cases.Length} CFs against {identifiers.Length} identifier(s):");
+        _output.WriteLine(string.Empty);
+
         // Run the harness and collect classifications.
         var classifications = new Dictionary<string, IdentificationResult?>();
         foreach (var (label, cf, _) in cases)
         {
             IdentificationResult? hit = null;
+            IdentificationResult lastResult = default;
             foreach (var identifier in identifiers)
             {
-                var result = identifier.TryIdentify(cf);
-                if (result.Match)
+                lastResult = identifier.TryIdentify(cf);
+                if (lastResult.Match)
                 {
-                    hit = result;
+                    hit = lastResult;
                     break;
                 }
             }
             classifications[label] = hit;
+
+            if (hit is { } matched)
+            {
+                _output.WriteLine(
+                    $"  {label,-8} → SOLVED as {matched.Identification} (depth {matched.Depth})");
+            }
+            else
+            {
+                _output.WriteLine(
+                    $"  {label,-8} → unsolved (gave up at depth {lastResult.Depth})");
+            }
         }
+
+        _output.WriteLine(string.Empty);
 
         // Assert each CF was classified (or not) as expected.
         foreach (var (label, _, expected) in cases)
