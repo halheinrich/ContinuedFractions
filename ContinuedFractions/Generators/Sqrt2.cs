@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace ContinuedFractions;
+namespace ContinuedFractions.Generators;
 
 /// <summary>
 /// The principal square root √2 ≈ 1.41421…, with continued fraction

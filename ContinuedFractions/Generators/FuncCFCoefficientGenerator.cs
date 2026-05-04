@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace ContinuedFractions;
+namespace ContinuedFractions.Generators;
 
 /// <summary>
 /// A <see cref="CFCoefficientGenerator"/> whose coefficients are produced

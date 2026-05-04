@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Numerics;
 using System.Text;
 
-namespace ContinuedFractions;
+namespace ContinuedFractions.Generators;
 
 /// <summary>
 /// A finite <see cref="CFCoefficientGenerator"/> backed by a fixed

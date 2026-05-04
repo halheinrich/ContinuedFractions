@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace ContinuedFractions;
+namespace ContinuedFractions.Generators;
 
 /// <summary>
 /// The golden ratio φ = (1 + √5) / 2 ≈ 1.61803…, with continued

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Numerics;
+using ContinuedFractions.Generators;
 using HalHeinrich.Numerics;
 
 namespace ContinuedFractions;

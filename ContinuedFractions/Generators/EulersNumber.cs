@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace ContinuedFractions;
+namespace ContinuedFractions.Generators;
 
 /// <summary>
 /// Euler's number e ≈ 2.71828…, with continued fraction expansion
