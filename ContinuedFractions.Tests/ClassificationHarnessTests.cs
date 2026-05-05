@@ -27,22 +27,36 @@ public class ClassificationHarnessTests
         {
             ("φ",      new ContinuedFraction(Patterns.Phi()),          "(√5 + 1)/2"),
             ("√2",     new ContinuedFraction(Patterns.Sqrt2()),        "√2"),
-            ("e",      new ContinuedFraction(Patterns.EulersNumber()), null),
+            ("e",      new ContinuedFraction(Patterns.EulersNumber()), "e"),
             ("√5",
                 new ContinuedFraction(
                     new PatternCFCoefficientGenerator(
                         new BigInteger[] { 2 },
                         new[] { Lane.Const(4) })),
                 "√5"),
+            ("(e−1)/(e+1)",
+                new ContinuedFraction(
+                    new PatternCFCoefficientGenerator(
+                        new BigInteger[] { 0 },
+                        new[] { Lane.Plus(2, 4) })),
+                "(e − 1)/(e + 1)"),
+            ("tanh(1/3)",
+                new ContinuedFraction(
+                    new PatternCFCoefficientGenerator(
+                        new BigInteger[] { 0 },
+                        new[] { Lane.Plus(3, 6) })),
+                "tanh(1/3)"),
             ("[3; 7]", new ContinuedFraction(Patterns.Rational(22, 7)), null),
         };
 
-        // Available identifiers, evaluated in order.
+        // Available identifiers, evaluated in order. Catalogue runs
+        // before Shape so that catalogue values get their canonical
+        // names ("(e − 1)/(e + 1)" rather than "tanh(1/2)").
         var identifiers = new CFIdentifier[]
         {
             new QuadraticIrrationalIdentifier(),
-            // Future identifiers (rational-multiple-of-e, periodic-CF, ...)
-            // would slot in here.
+            new EFamilyCatalogueIdentifier(),
+            new EFamilyShapeIdentifier(),
         };
 
         _output.WriteLine(
