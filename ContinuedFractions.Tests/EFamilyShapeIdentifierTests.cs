@@ -57,8 +57,9 @@ public class EFamilyShapeIdentifierTests
     }
 
     [Fact]
-    public void Identifies_TanhHalf_CatalogueCf_AsTanhFamily()
+    public void Identifies_TanhHalf_AliasedToAlgebraicForm()
     {
+        // tanh(1/2) renames to "(e − 1)/(e + 1)" via the alias table.
         var cf = new ContinuedFraction(
             new PatternCFCoefficientGenerator(
                 new BigInteger[] { 0 },
@@ -67,12 +68,13 @@ public class EFamilyShapeIdentifierTests
         var result = new EFamilyShapeIdentifier().TryIdentify(cf);
 
         Assert.True(result.Match);
-        Assert.Equal("tanh(1/2)", result.Identification);
+        Assert.Equal("(e − 1)/(e + 1)", result.Identification);
     }
 
     [Fact]
-    public void Identifies_CothHalf_CatalogueCf_AsCothFamily()
+    public void Identifies_CothHalf_AliasedToAlgebraicForm()
     {
+        // coth(1/2) renames to "(e + 1)/(e − 1)" via the alias table.
         var cf = new ContinuedFraction(
             new PatternCFCoefficientGenerator(
                 new BigInteger[] { 2 },
@@ -81,7 +83,7 @@ public class EFamilyShapeIdentifierTests
         var result = new EFamilyShapeIdentifier().TryIdentify(cf);
 
         Assert.True(result.Match);
-        Assert.Equal("coth(1/2)", result.Identification);
+        Assert.Equal("(e + 1)/(e − 1)", result.Identification);
     }
 
     // ---------- additional family members not in the catalogue ----------

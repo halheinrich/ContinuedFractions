@@ -49,13 +49,10 @@ public class ClassificationHarnessTests
             ("[3; 7]", new ContinuedFraction(Patterns.Rational(22, 7)), null),
         };
 
-        // Available identifiers, evaluated in order. Catalogue runs
-        // before Shape so that catalogue values get their canonical
-        // names ("(e − 1)/(e + 1)" rather than "tanh(1/2)").
+        // Available identifiers, evaluated in order.
         var identifiers = new CFIdentifier[]
         {
             new QuadraticIrrationalIdentifier(),
-            new EFamilyCatalogueIdentifier(),
             new EFamilyShapeIdentifier(),
         };
 

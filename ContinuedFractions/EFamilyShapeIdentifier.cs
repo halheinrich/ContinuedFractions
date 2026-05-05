@@ -12,11 +12,15 @@ namespace ContinuedFractions;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Unlike <see cref="EFamilyCatalogueIdentifier"/>, which compares
-/// against a fixed list of named values, this identifier is
-/// parameterised: it catches every <c>tanh(1/m)</c> for any positive
-/// integer <c>m</c>, every <c>coth(1/m)</c>, and every
-/// integer-shifted <c>e</c>.
+/// The identifier is parameterised: it catches every <c>tanh(1/m)</c>
+/// for any positive integer <c>m</c>, every <c>coth(1/m)</c>, and
+/// every integer-shifted <c>e</c>.
+/// </para>
+/// <para>
+/// A small alias table renames a handful of values from their
+/// function-call form to a more recognisable algebraic form —
+/// <c>tanh(1/2)</c> ↦ <c>(e − 1)/(e + 1)</c> and <c>coth(1/2)</c> ↦
+/// <c>(e + 1)/(e − 1)</c>. Add aliases as canonical names emerge.
 /// </para>
 /// <para>
 /// Recognisers tried, in order:
@@ -83,24 +87,40 @@ public sealed class EFamilyShapeIdentifier : CFIdentifier
             return IdentificationResult.NotMatched(Math.Max(len - 1, 0));
         }
 
-        if (TryTanh(generator) is { } tanhMatch)
-        {
-            return tanhMatch;
-        }
-        if (TryCoth(generator) is { } cothMatch)
-        {
-            return cothMatch;
-        }
-        if (TryEulerShifted(generator) is { } eulerMatch)
-        {
-            return eulerMatch;
-        }
-        if (TryReciprocalEulerShifted(generator) is { } reciprocalMatch)
-        {
-            return reciprocalMatch;
-        }
+        var match = TryTanh(generator)
+                 ?? TryCoth(generator)
+                 ?? TryEulerShifted(generator)
+                 ?? TryReciprocalEulerShifted(generator);
 
+        if (match is { } found)
+        {
+            return ApplyAlias(found);
+        }
         return IdentificationResult.NotMatched(_maxComparisonDepth - 1);
+    }
+
+    /// <summary>
+    /// A small table mapping function-call names to canonical algebraic
+    /// forms when the identity is well-known and the algebraic form
+    /// reads better.
+    /// </summary>
+    private static readonly Dictionary<string, string> Aliases = new()
+    {
+        ["tanh(1/2)"] = "(e − 1)/(e + 1)",
+        ["coth(1/2)"] = "(e + 1)/(e − 1)",
+    };
+
+    /// <summary>
+    /// Substitutes the canonical algebraic form for an aliased
+    /// identification, leaving non-aliased names unchanged.
+    /// </summary>
+    private static IdentificationResult ApplyAlias(IdentificationResult result)
+    {
+        if (result.Identification is { } name && Aliases.TryGetValue(name, out var canonical))
+        {
+            return IdentificationResult.Matched(canonical, result.Depth);
+        }
+        return result;
     }
 
     /// <summary>
