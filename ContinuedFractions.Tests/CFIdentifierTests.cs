@@ -1,3 +1,6 @@
+using System.Numerics;
+using ContinuedFractions.Generators;
+
 namespace ContinuedFractions.Tests;
 
 public class CFIdentifierTests
@@ -21,13 +24,15 @@ public class CFIdentifierTests
             => _impl(cf);
     }
 
+    private static ContinuedFraction TrivialCf() =>
+        new(new PatternCFCoefficientGenerator(new BigInteger[] { 1 }, Array.Empty<Lane>()));
+
     [Fact]
     public void TryIdentify_DispatchesToCore_WhenMatched()
     {
         var id = new StubIdentifier(_ => IdentificationResult.Matched("test", 3));
-        var cf = new ContinuedFraction(1);
 
-        var result = id.TryIdentify(cf);
+        var result = id.TryIdentify(TrivialCf());
 
         Assert.True(result.Match);
         Assert.Equal("test", result.Identification);
@@ -38,9 +43,8 @@ public class CFIdentifierTests
     public void TryIdentify_DispatchesToCore_WhenNotMatched()
     {
         var id = new StubIdentifier(_ => IdentificationResult.NotMatched(50));
-        var cf = new ContinuedFraction(1);
 
-        var result = id.TryIdentify(cf);
+        var result = id.TryIdentify(TrivialCf());
 
         Assert.False(result.Match);
         Assert.Null(result.Identification);
@@ -70,7 +74,10 @@ public class CFIdentifierTests
             captured = cf;
             return IdentificationResult.NotMatched(0);
         });
-        var input = new ContinuedFraction(1, 2, 3);
+        var input = new ContinuedFraction(
+            new PatternCFCoefficientGenerator(
+                new BigInteger[] { 1, 2, 3 },
+                Array.Empty<Lane>()));
 
         id.TryIdentify(input);
 

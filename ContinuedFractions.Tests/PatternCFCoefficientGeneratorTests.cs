@@ -26,8 +26,22 @@ public class PatternCFCoefficientGeneratorTests
     }
 
     [Fact]
-    public void Constructor_RejectsEmptyLanes()
+    public void Constructor_AcceptsEmptyLanes_ForFiniteRationalCfs()
     {
+        // Empty lanes ⇒ finite CF (rational) carried entirely by the
+        // pre-period. The combination is allowed.
+        var gen = new PatternCFCoefficientGenerator(
+            new BigInteger[] { 3, 7 },
+            Array.Empty<Lane>());
+
+        Assert.True(gen.IsRational);
+        Assert.Equal(2, gen.Length);
+    }
+
+    [Fact]
+    public void Constructor_RejectsEmptyPreperiodAndEmptyLanes()
+    {
+        // A CF must have at least one coefficient.
         Assert.Throws<ArgumentException>(() =>
             new PatternCFCoefficientGenerator(
                 Array.Empty<BigInteger>(),
@@ -121,6 +135,74 @@ public class PatternCFCoefficientGeneratorTests
         Assert.False(gen.IsQuadraticIrrational);
     }
 
+    [Fact]
+    public void IsQuadraticIrrational_FalseForFiniteCf()
+    {
+        // A finite (rational) CF is not a quadratic irrational.
+        var gen = new PatternCFCoefficientGenerator(
+            new BigInteger[] { 3, 7 },
+            Array.Empty<Lane>());
+
+        Assert.False(gen.IsQuadraticIrrational);
+        Assert.True(gen.IsRational);
+    }
+
+    // ---------- IsRational ----------
+
+    [Fact]
+    public void IsRational_TrueWhenLaneCycleIsEmpty()
+    {
+        var gen = new PatternCFCoefficientGenerator(
+            new BigInteger[] { 3, 7 },
+            Array.Empty<Lane>());
+
+        Assert.True(gen.IsRational);
+    }
+
+    [Fact]
+    public void IsRational_FalseWhenLaneCycleHasAnyLane()
+    {
+        var gen = new PatternCFCoefficientGenerator(
+            Array.Empty<BigInteger>(),
+            new[] { Lane.Const(1) });
+
+        Assert.False(gen.IsRational);
+    }
+
+    // ---------- Length ----------
+
+    [Fact]
+    public void Length_FiniteForRationalPattern()
+    {
+        var gen = new PatternCFCoefficientGenerator(
+            new BigInteger[] { 1, 2, 3, 4 },
+            Array.Empty<Lane>());
+
+        Assert.Equal(4, gen.Length);
+    }
+
+    [Fact]
+    public void Length_NullForUnboundedGenerator()
+    {
+        var gen = new PatternCFCoefficientGenerator(
+            Array.Empty<BigInteger>(),
+            new[] { Lane.Const(1) });
+
+        Assert.Null(gen.Length);
+    }
+
+    // ---------- finite CF indexing ----------
+
+    [Fact]
+    public void Indexer_RejectsIndexBeyondFiniteLength()
+    {
+        var gen = new PatternCFCoefficientGenerator(
+            new BigInteger[] { 3, 7 },
+            Array.Empty<Lane>());
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => gen[2]);
+    }
+
     // ---------- indexing ----------
 
     [Fact]
@@ -202,16 +284,6 @@ public class PatternCFCoefficientGeneratorTests
         Assert.Throws<ArgumentOutOfRangeException>(() => gen[-1]);
     }
 
-    [Fact]
-    public void Length_IsNullForUnboundedGenerator()
-    {
-        var gen = new PatternCFCoefficientGenerator(
-            Array.Empty<BigInteger>(),
-            new[] { Lane.Const(1) });
-
-        Assert.Null(gen.Length);
-    }
-
     // ---------- integration with ContinuedFraction ----------
 
     [Fact]
@@ -244,18 +316,27 @@ public class PatternCFCoefficientGeneratorTests
     }
 
     [Fact]
-    public void Integration_EulersNumberPattern_MatchesEulersNumberGenerator()
+    public void Integration_EulersNumberPattern_ProducesKnownCoefficients()
     {
-        // The pattern reproduces the same coefficients as the dedicated
-        // EulersNumber generator for at least the first 24 terms.
-        var pattern = new PatternCFCoefficientGenerator(
-            new BigInteger[] { 2 },
-            new[] { Lane.Const(1), Lane.Plus(2, 2), Lane.Const(1) });
-        var canonical = new EulersNumber();
-
-        for (var i = 0; i < 24; i++)
+        // First 24 coefficients of e's CF expansion:
+        // [2; 1, 2, 1, 1, 4, 1, 1, 6, 1, 1, 8, 1, 1, 10, 1, 1, 12, 1, 1, 14, 1, 1, 16, …]
+        var pattern = Patterns.EulersNumber();
+        var expected = new BigInteger[]
         {
-            Assert.Equal(canonical[i], pattern[i]);
+            2,
+            1,  2, 1,
+            1,  4, 1,
+            1,  6, 1,
+            1,  8, 1,
+            1, 10, 1,
+            1, 12, 1,
+            1, 14, 1,
+            1, 16,
+        };
+
+        for (var i = 0; i < expected.Length; i++)
+        {
+            Assert.Equal(expected[i], pattern[i]);
         }
     }
 }

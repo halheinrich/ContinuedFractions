@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Numerics;
 using ContinuedFractions.Generators;
@@ -10,8 +9,12 @@ namespace ContinuedFractions;
 /// <summary>
 /// A simple continued fraction <c>[a0; a1, a2, ...]</c> where <c>a0</c> is
 /// the integer part (any sign) and <c>a1, a2, ...</c> are strictly positive
-/// partial quotients. May be finite (representing a rational) or unbounded
-/// (representing an irrational).
+/// partial quotients. Constructed from a
+/// <see cref="PatternCFCoefficientGenerator"/>, which describes the
+/// CF's structure (pre-period plus optional cycling lanes) and exposes
+/// the structural classifiers
+/// <see cref="PatternCFCoefficientGenerator.IsRational"/> and
+/// <see cref="PatternCFCoefficientGenerator.IsQuadraticIrrational"/>.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -34,7 +37,7 @@ namespace ContinuedFractions;
 /// </remarks>
 public sealed class ContinuedFraction : IEnumerable<BigRational>
 {
-    private readonly CFCoefficientGenerator _generator;
+    private readonly PatternCFCoefficientGenerator _generator;
 
     // Memoized convergents and recurrence state. The recurrence is
     //   p_{-1} = 1, p_{-2} = 0
@@ -49,67 +52,30 @@ public sealed class ContinuedFraction : IEnumerable<BigRational>
     private BigInteger _qPrevPrev = BigInteger.One;
 
     /// <summary>
-    /// The underlying coefficient generator. Iterate or index this for
-    /// access to the partial quotients of any continued fraction,
-    /// regardless of how it was constructed.
+    /// The underlying pattern generator. Iterate or index this for
+    /// access to the partial quotients, and consult its
+    /// <see cref="PatternCFCoefficientGenerator.IsRational"/> /
+    /// <see cref="PatternCFCoefficientGenerator.IsQuadraticIrrational"/>
+    /// classifiers for structural facts about the CF.
     /// </summary>
-    public CFCoefficientGenerator Generator => _generator;
+    public PatternCFCoefficientGenerator Generator => _generator;
 
     /// <summary>
-    /// Constructs a continued fraction from its coefficient sequence.
-    /// </summary>
-    /// <param name="coefficients">
-    /// The coefficients in order: integer part first, then partial quotients.
-    /// At least one coefficient is required; partial quotients (a1 onward)
-    /// must be strictly positive.
-    /// </param>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="coefficients"/> is null.
-    /// </exception>
-    /// <exception cref="ArgumentException">
-    /// The sequence is empty, or a partial quotient is non-positive.
-    /// </exception>
-    public ContinuedFraction(IEnumerable<BigInteger> coefficients)
-    {
-        _generator = new ListCFCoefficientGenerator(ValidateAndFreeze(coefficients));
-    }
-
-    /// <inheritdoc cref="ContinuedFraction(IEnumerable{BigInteger})"/>
-    public ContinuedFraction(params BigInteger[] coefficients)
-        : this((IEnumerable<BigInteger>)coefficients)
-    {
-    }
-
-    /// <summary>
-    /// Constructs a continued fraction backed by a coefficient generator.
+    /// Constructs a continued fraction backed by a
+    /// <see cref="PatternCFCoefficientGenerator"/>.
     /// </summary>
     /// <param name="generator">
-    /// The source of partial quotients. Must yield at least one
-    /// coefficient (i.e. its <see cref="CFCoefficientGenerator.Length"/>
-    /// is either <see langword="null"/> — unbounded — or at least 1).
+    /// The pattern describing this CF's structure. The pattern is the
+    /// sole CF construction surface — to express a value, build the
+    /// pattern (directly or via a factory in
+    /// <see cref="Patterns"/>) and pass it here.
     /// </param>
-    /// <remarks>
-    /// CF invariants on partial-quotient values
-    /// (<c>a_i</c> strictly positive for <c>i ≥ 1</c>) are not validated
-    /// at construction; they are checked lazily when the generator is
-    /// consumed by convergent computation.
-    /// </remarks>
     /// <exception cref="ArgumentNullException">
-    /// <paramref name="generator"/> is null.
+    /// <paramref name="generator"/> is <see langword="null"/>.
     /// </exception>
-    /// <exception cref="ArgumentException">
-    /// <paramref name="generator"/> has <see cref="CFCoefficientGenerator.Length"/> 0.
-    /// </exception>
-    public ContinuedFraction(CFCoefficientGenerator generator)
+    public ContinuedFraction(PatternCFCoefficientGenerator generator)
     {
         ArgumentNullException.ThrowIfNull(generator);
-        if (generator.Length is 0)
-        {
-            throw new ArgumentException(
-                "Generator must yield at least one coefficient.",
-                nameof(generator));
-        }
-
         _generator = generator;
     }
 
@@ -212,38 +178,7 @@ public sealed class ContinuedFraction : IEnumerable<BigRational>
     // ---------- formatting ----------
 
     /// <summary>
-    /// Returns the generator's identification (e.g. <c>"φ"</c>,
-    /// <c>"√2"</c>, or <c>"[1; 2, 3]"</c> for a list-backed CF).
-    /// Depth-bounded rendering of an unbounded CF is the caller's
-    /// responsibility — iterate <see cref="Generator"/> or this CF
-    /// directly.
+    /// Returns the underlying pattern's rendering.
     /// </summary>
     public override string ToString() => _generator.ToString();
-
-    private static ReadOnlyCollection<BigInteger> ValidateAndFreeze(
-        IEnumerable<BigInteger> coefficients)
-    {
-        ArgumentNullException.ThrowIfNull(coefficients);
-
-        var list = coefficients.ToArray();
-        if (list.Length == 0)
-        {
-            throw new ArgumentException(
-                "At least one coefficient is required.",
-                nameof(coefficients));
-        }
-
-        for (var i = 1; i < list.Length; i++)
-        {
-            if (list[i].Sign <= 0)
-            {
-                throw new ArgumentException(
-                    $"Partial quotient a{i.ToString(CultureInfo.InvariantCulture)} " +
-                    $"must be positive (got {list[i].ToString(CultureInfo.InvariantCulture)}).",
-                    nameof(coefficients));
-            }
-        }
-
-        return new ReadOnlyCollection<BigInteger>(list);
-    }
 }

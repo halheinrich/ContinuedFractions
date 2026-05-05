@@ -25,15 +25,16 @@ public class ClassificationHarnessTests
         // (or null if no current identifier should match).
         var cases = new (string Label, ContinuedFraction Cf, string? ExpectedIdentification)[]
         {
-            ("φ",          new ContinuedFraction(new Phi()),          "(√5 + 1)/2"),
-            ("√2",         new ContinuedFraction(new Sqrt2()),        "√2"),
-            ("e",          new ContinuedFraction(new EulersNumber()), null),
+            ("φ",      new ContinuedFraction(Patterns.Phi()),          "(√5 + 1)/2"),
+            ("√2",     new ContinuedFraction(Patterns.Sqrt2()),        "√2"),
+            ("e",      new ContinuedFraction(Patterns.EulersNumber()), null),
             ("√5",
                 new ContinuedFraction(
-                    new FuncCFCoefficientGenerator(
-                        "√5", i => i == 0 ? new BigInteger(2) : new BigInteger(4))),
+                    new PatternCFCoefficientGenerator(
+                        new BigInteger[] { 2 },
+                        new[] { Lane.Const(4) })),
                 "√5"),
-            ("[3; 7]",     new ContinuedFraction(3, 7),               null),
+            ("[3; 7]", new ContinuedFraction(Patterns.Rational(22, 7)), null),
         };
 
         // Available identifiers, evaluated in order.

@@ -6,8 +6,8 @@ namespace ContinuedFractions.Generators;
 /// <summary>
 /// A continued-fraction coefficient generator built from a pre-period
 /// (a finite sequence of explicit coefficients emitted once, in order)
-/// followed by a periodic part composed of <see cref="Lane"/>s that
-/// cycle indefinitely. Each lane evolves its emitted value across
+/// followed by an optional periodic part composed of <see cref="Lane"/>s
+/// that cycle indefinitely. Each lane evolves its emitted value across
 /// visits according to its <see cref="Operation"/>.
 /// </summary>
 /// <remarks>
@@ -19,16 +19,27 @@ namespace ContinuedFractions.Generators;
 /// linearly or geometrically.
 /// </para>
 /// <para>
-/// <b>Quadratic-irrational classification.</b> By Lagrange's theorem a
-/// real number is a quadratic irrational iff its CF is eventually
-/// periodic. For a <see cref="PatternCFCoefficientGenerator"/> the
-/// periodicity question reduces to a structural check on the lanes:
-/// every lane being <see cref="Operation.Const"/> ⇔ the periodic part
-/// genuinely repeats ⇔ the value is a quadratic irrational. Any
-/// non-<see cref="Operation.Const"/> lane breaks periodicity, so the
-/// value cannot be a quadratic irrational. <see cref="IsQuadraticIrrational"/>
-/// exposes this classification — derived purely from the constructor
-/// inputs, no coefficient inspection required.
+/// <b>Structural classification.</b> The generator's classifier
+/// properties partition every CF it can produce into three disjoint
+/// classes, derived purely from the constructor inputs:
+/// <list type="bullet">
+/// <item>
+/// <see cref="IsRational"/> — empty lane cycle, just the finite
+/// pre-period: the CF is a finite rational expansion.
+/// </item>
+/// <item>
+/// <see cref="IsQuadraticIrrational"/> — non-empty lane cycle with every
+/// lane being <see cref="Operation.Const"/>. By Lagrange's theorem the
+/// CF is eventually periodic ⇔ the value is a quadratic irrational.
+/// </item>
+/// <item>
+/// Neither — at least one lane is <see cref="Operation.Plus"/> or
+/// <see cref="Operation.Multiply"/> (etc.), so the lane values grow,
+/// the CF is not periodic, and the value is something other than a
+/// quadratic irrational (often transcendental).
+/// </item>
+/// </list>
+/// The "neither" bucket is what the discovery harness investigates.
 /// </para>
 /// <para>
 /// <b>Indexing.</b> Position <c>i</c> of the CF resolves to:
@@ -61,16 +72,18 @@ public sealed class PatternCFCoefficientGenerator : CFCoefficientGenerator
     /// be a valid partial quotient (<c>≥ 1</c>).
     /// </param>
     /// <param name="lanes">
-    /// At least one <see cref="Lane"/>, cycled indefinitely after the
-    /// pre-period is exhausted.
+    /// Zero or more <see cref="Lane"/>s, cycled indefinitely after the
+    /// pre-period is exhausted. An empty list represents a finite
+    /// (rational) CF whose entire content is the pre-period.
     /// </param>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="preperiod"/> or <paramref name="lanes"/> is
     /// <see langword="null"/>.
     /// </exception>
     /// <exception cref="ArgumentException">
-    /// <paramref name="lanes"/> is empty, or a non-leading pre-period
-    /// element is not a valid partial quotient.
+    /// Both <paramref name="preperiod"/> and <paramref name="lanes"/>
+    /// are empty (a CF must have at least one coefficient), or a
+    /// non-leading pre-period element is not a valid partial quotient.
     /// </exception>
     public PatternCFCoefficientGenerator(
         IReadOnlyList<BigInteger> preperiod,
@@ -79,10 +92,11 @@ public sealed class PatternCFCoefficientGenerator : CFCoefficientGenerator
         ArgumentNullException.ThrowIfNull(preperiod);
         ArgumentNullException.ThrowIfNull(lanes);
 
-        if (lanes.Count == 0)
+        if (preperiod.Count == 0 && lanes.Count == 0)
         {
             throw new ArgumentException(
-                "At least one lane is required (the periodic part).",
+                "A CF must have at least one coefficient — either the " +
+                "pre-period or the lane cycle must be non-empty.",
                 nameof(lanes));
         }
 
@@ -125,16 +139,28 @@ public sealed class PatternCFCoefficientGenerator : CFCoefficientGenerator
     public IReadOnlyList<Lane> Lanes => _lanes;
 
     /// <summary>
+    /// <see langword="true"/> when the lane cycle is empty — the CF is
+    /// finite and represents a rational number. The pre-period itself
+    /// is the entire CF expansion.
+    /// </summary>
+    public bool IsRational => _lanes.Length == 0;
+
+    /// <summary>
     /// <see langword="true"/> when the represented value is a quadratic
-    /// irrational — equivalently, when every lane is
-    /// <see cref="Operation.Const"/> (so the periodic part genuinely
-    /// repeats and the CF is eventually periodic). Derived structurally
-    /// from the constructor inputs in <c>O(lanes.Count)</c> time.
+    /// irrational — equivalently, the lane cycle is non-empty and every
+    /// lane is <see cref="Operation.Const"/> (so the periodic part
+    /// genuinely repeats and, by Lagrange's theorem, the value is a
+    /// quadratic irrational). Derived structurally from the constructor
+    /// inputs in <c>O(lanes.Count)</c> time.
     /// </summary>
     public bool IsQuadraticIrrational
     {
         get
         {
+            if (_lanes.Length == 0)
+            {
+                return false;
+            }
             foreach (var lane in _lanes)
             {
                 if (lane.Operation != Operation.Const)
@@ -147,6 +173,9 @@ public sealed class PatternCFCoefficientGenerator : CFCoefficientGenerator
     }
 
     /// <inheritdoc/>
+    public override int? Length => _lanes.Length == 0 ? _preperiod.Length : null;
+
+    /// <inheritdoc/>
     public override BigInteger this[int index]
     {
         get
@@ -156,6 +185,14 @@ public sealed class PatternCFCoefficientGenerator : CFCoefficientGenerator
             if (index < _preperiod.Length)
             {
                 return _preperiod[index];
+            }
+
+            if (_lanes.Length == 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(index),
+                    index,
+                    $"Index out of range for finite CF (length {_preperiod.Length.ToString(CultureInfo.InvariantCulture)}).");
             }
 
             var j = index - _preperiod.Length;
@@ -172,6 +209,10 @@ public sealed class PatternCFCoefficientGenerator : CFCoefficientGenerator
             ", ",
             _preperiod.Select(p => p.ToString(CultureInfo.InvariantCulture)));
         var cycle = string.Join(", ", _lanes.Select(l => l.ToString()));
+        if (_lanes.Length == 0)
+        {
+            return $"[{pre}]";
+        }
         return _preperiod.Length == 0
             ? $"[ ; {cycle}]"
             : $"[{pre}; {cycle}]";
