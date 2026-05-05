@@ -1,10 +1,18 @@
 using System.Numerics;
 using ContinuedFractions.Generators;
+using Xunit.Abstractions;
 
 namespace ContinuedFractions.Tests;
 
 public class QuadraticIrrationalIdentifierTests
 {
+    private readonly ITestOutputHelper _output;
+
+    public QuadraticIrrationalIdentifierTests(ITestOutputHelper output)
+    {
+        _output = output;
+    }
+
     // ---------- construction ----------
 
     [Fact]
@@ -222,12 +230,60 @@ public class QuadraticIrrationalIdentifierTests
                 : ((i - 1) % 2) == 0 ? new BigInteger(3) : new BigInteger(6));
         var cf = new ContinuedFraction(sqrt11);
 
-        // Default budget of 10000 covers up through level ~21, so √11
+        // Default budget covers up through level ~21, so √11
         // (at position ~1111) is well within reach.
         var result = new QuadraticIrrationalIdentifier()
             .TryIdentifyQuadratic(cf);
 
         Assert.True(result.Match);
         Assert.Equal(new QuadraticIrrational(11, 0, 1), result.Value);
+    }
+
+    // ---------- sweep across constant CFs ----------
+
+    [Fact]
+    public void TryIdentify_ConstantCfs_AcrossN_1_to_100()
+    {
+        // [n; n, n, …] satisfies α = n + 1/α, so α = (n + √(n²+4))/2.
+        // Even n = 2k simplifies to k + √(k²+1)  — canonical (k²+1, −k, 1).
+        // Odd n stays at (n²+4, −n, 2). The identifier finds the smallest
+        // canonical form first; values whose canonical level exceeds the
+        // default 20 000-triple budget remain unsolved.
+        var identifier = new QuadraticIrrationalIdentifier();
+        var solved = new List<(int N, string Identification)>();
+        var unsolved = new List<int>();
+
+        for (var n = 1; n <= 100; n++)
+        {
+            var nVal = new BigInteger(n);
+            var cf = new ContinuedFraction(
+                new FuncCFCoefficientGenerator($"[{n}; {n}, …]", _ => nVal));
+            var result = identifier.TryIdentify(cf);
+            if (result.Match)
+            {
+                solved.Add((n, result.Identification!));
+            }
+            else
+            {
+                unsolved.Add(n);
+            }
+        }
+
+        _output.WriteLine("CF [n; n, n, …] identified at default budget:");
+        _output.WriteLine(string.Empty);
+        foreach (var (n, ident) in solved)
+        {
+            _output.WriteLine($"  n = {n,3}  →  {ident}");
+        }
+        _output.WriteLine(string.Empty);
+        _output.WriteLine(
+            $"Solved {solved.Count}/100. Unsolved n = [{string.Join(", ", unsolved)}].");
+
+        Assert.Contains((1, "(√5 + 1)/2"), solved);   // φ
+        Assert.Contains((2, "√2 + 1"), solved);       // 1 + √2
+        Assert.Contains((3, "(√13 + 3)/2"), solved);
+        Assert.Contains((4, "√5 + 2"), solved);
+        Assert.Contains((6, "√10 + 3"), solved);
+        Assert.Contains((8, "√17 + 4"), solved);
     }
 }
