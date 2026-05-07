@@ -89,7 +89,7 @@ public class EFamilyShapeIdentifierTests
     // ---------- additional family members not in the catalogue ----------
 
     [Theory]
-    [InlineData(1, "tanh(1/1)")]
+    [InlineData(1, "tanh(1)")]
     [InlineData(3, "tanh(1/3)")]
     [InlineData(5, "tanh(1/5)")]
     [InlineData(7, "tanh(1/7)")]
@@ -108,7 +108,7 @@ public class EFamilyShapeIdentifierTests
     }
 
     [Theory]
-    [InlineData(1, "coth(1/1)")]
+    [InlineData(1, "coth(1)")]
     [InlineData(3, "coth(1/3)")]
     [InlineData(5, "coth(1/5)")]
     public void Identifies_CothOneOverM_ForVariousM(int m, string expectedName)

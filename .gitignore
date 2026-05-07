@@ -15,6 +15,9 @@ TestResults/
 *.coverage
 *.coveragexml
 
+# Discovery hunt output (regenerated each run)
+hunt-output.txt
+
 # NuGet packages
 *.nupkg
 *.snupkg

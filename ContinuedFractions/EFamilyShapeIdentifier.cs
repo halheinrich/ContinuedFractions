@@ -149,7 +149,7 @@ public sealed class EFamilyShapeIdentifier : CFIdentifier
         }
 
         return IdentificationResult.Matched(
-            $"tanh(1/{m.ToString(CultureInfo.InvariantCulture)})",
+            FormatTanhArgument(m),
             _maxComparisonDepth - 1);
     }
 
@@ -175,9 +175,27 @@ public sealed class EFamilyShapeIdentifier : CFIdentifier
         }
 
         return IdentificationResult.Matched(
-            $"coth(1/{m.ToString(CultureInfo.InvariantCulture)})",
+            FormatCothArgument(m),
             _maxComparisonDepth - 1);
     }
+
+    /// <summary>
+    /// Renders <c>tanh(1/m)</c> as <c>"tanh(1)"</c> when <c>m = 1</c>,
+    /// otherwise as <c>"tanh(1/m)"</c>.
+    /// </summary>
+    private static string FormatTanhArgument(BigInteger m) =>
+        m.IsOne
+            ? "tanh(1)"
+            : $"tanh(1/{m.ToString(CultureInfo.InvariantCulture)})";
+
+    /// <summary>
+    /// Renders <c>coth(1/m)</c> as <c>"coth(1)"</c> when <c>m = 1</c>,
+    /// otherwise as <c>"coth(1/m)"</c>.
+    /// </summary>
+    private static string FormatCothArgument(BigInteger m) =>
+        m.IsOne
+            ? "coth(1)"
+            : $"coth(1/{m.ToString(CultureInfo.InvariantCulture)})";
 
     /// <summary>
     /// Recognises <c>e + (k − 2)</c>: CF
