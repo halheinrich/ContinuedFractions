@@ -127,15 +127,102 @@ public class HuntTests
             "Hunt must produce some unsolved candidates — those are the discovery surface.");
     }
 
+    [Fact]
+    public void Hunt_SingleLanePatterns_LevelOne_ShowEachAndSolution()
+    {
+        var quadratic = new QuadraticIrrationalIdentifier();
+        var eFamily = new EFamilyShapeIdentifier();
+
+        var rationalCount = 0;
+        var quadraticSolved = 0;
+        var eFamilySolved = 0;
+        var candidateCount = 0;
+        var rows = new List<(int Level, string Label, string Cf, string Verdict)>();
+
+        foreach (var (level, pattern) in EnumerateLevels(maxLevel: 1))
+        {
+            var label = DescribePattern(pattern);
+            var cf = pattern.ToString();
+
+            string verdict;
+            if (pattern.IsRational)
+            {
+                verdict = "rational";
+                rationalCount++;
+            }
+            else if (pattern.IsQuadraticIrrational)
+            {
+                var r = quadratic.TryIdentify(new ContinuedFraction(pattern));
+                if (r.Match)
+                {
+                    verdict = $"Quadratic → {r.Identification}";
+                    quadraticSolved++;
+                }
+                else
+                {
+                    verdict = "Quadratic over budget";
+                    candidateCount++;
+                }
+            }
+            else
+            {
+                var r = eFamily.TryIdentify(new ContinuedFraction(pattern));
+                if (r.Match)
+                {
+                    verdict = $"EFamily → {r.Identification}";
+                    eFamilySolved++;
+                }
+                else
+                {
+                    verdict = "candidate";
+                    candidateCount++;
+                }
+            }
+
+            rows.Add((level, label, cf, verdict));
+        }
+
+        var report = new StringBuilder();
+        var inv = CultureInfo.InvariantCulture;
+        report.AppendLine(inv, $"Single-lane pattern hunt — {rows.Count} patterns at level 1:");
+        report.AppendLine();
+
+        foreach (var (level, label, cf, verdict) in rows)
+        {
+            report.AppendLine(inv, $"  L{level}  {label,-32}  CF {cf}   {verdict}");
+        }
+
+        report.AppendLine();
+        report.AppendLine(
+            inv,
+            $"Totals: rational={rationalCount}, " +
+            $"Quadratic-solved={quadraticSolved}, " +
+            $"EFamily-solved={eFamilySolved}, " +
+            $"candidates={candidateCount}");
+
+        var reportText = report.ToString();
+        _output.WriteLine(reportText);
+
+        var testProjectDir = Path.GetFullPath(
+            Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
+        var reportPath = Path.Combine(testProjectDir, "hunt-output-level1.txt");
+        File.WriteAllText(reportPath, reportText);
+        _output.WriteLine($"Report also written to: {reportPath}");
+
+        Assert.Contains(rows, r =>
+            r.Label == "Pattern([], Const(1))" &&
+            r.Verdict == "Quadratic → (√5 + 1)/2");                  // φ
+    }
+
     // ---------- enumeration ----------
 
     private static IEnumerable<(int Level, PatternCFCoefficientGenerator Pattern)> EnumerateLevels(int maxLevel)
     {
         for (var level = 1; level <= maxLevel; level++)
         {
-            foreach (var preperiod in EnumeratePreperiods(level))
+            foreach (BigInteger[] preperiod in EnumeratePreperiods(level))
             {
-                foreach (var lane in EnumerateLanes(level))
+                foreach (Lane lane in EnumerateLanes(level))
                 {
                     if (MaxFieldValue(preperiod, lane) != level)
                     {
@@ -161,11 +248,13 @@ public class HuntTests
     }
 
     /// <summary>
-    /// All single lanes whose field values stay within
-    /// <paramref name="upToValue"/>: <c>Const(c)</c> for
-    /// <c>c ∈ 1..upToValue</c>, <c>Plus(init, op)</c> with both in
+    /// All single lanes at level <paramref name="upToValue"/>: <c>Const(c)</c>
+    /// for <c>c ∈ 1..upToValue</c>, <c>Plus(init, op)</c> with both in
     /// <c>1..upToValue</c>, and <c>Multiply(init, op)</c> with
-    /// <c>init ∈ 1..upToValue</c> and <c>op ∈ 2..upToValue</c>.
+    /// <c>init ∈ 1..upToValue</c> and <c>op ∈ 2..upToValue + 1</c>.
+    /// The Multiply range is shifted by one so its minimum operand
+    /// (<c>2</c>) appears at level 1 alongside <see cref="Operation.Const"/>
+    /// and <see cref="Operation.Plus"/>.
     /// </summary>
     private static IEnumerable<Lane> EnumerateLanes(int upToValue)
     {
@@ -176,7 +265,7 @@ public class HuntTests
             {
                 yield return Lane.Plus(init, op);
             }
-            for (var op = 2; op <= upToValue; op++)
+            for (var op = 2; op <= upToValue + 1; op++)
             {
                 yield return Lane.Multiply(init, op);
             }
@@ -186,7 +275,11 @@ public class HuntTests
     /// <summary>
     /// The largest absolute value among the pattern's pre-period entries
     /// and the lane's <c>InitialValue</c> / <c>Operand</c> (the latter
-    /// only when the operation actually uses it).
+    /// only when the operation actually uses it). For
+    /// <see cref="Operation.Multiply"/> the operand contributes
+    /// <c>|Operand| − 1</c>, so the minimum legal Multiply
+    /// (<c>×2</c>) registers as level 1 — matching the way <c>+1</c> is
+    /// the level-1 minimum for <see cref="Operation.Plus"/>.
     /// </summary>
     private static int MaxFieldValue(BigInteger[] preperiod, Lane lane)
     {
@@ -209,6 +302,10 @@ public class HuntTests
         if (lane.Operation != Operation.Const)
         {
             var opAbs = (int)BigInteger.Abs(lane.Operand);
+            if (lane.Operation == Operation.Multiply)
+            {
+                opAbs--;
+            }
             if (opAbs > max)
             {
                 max = opAbs;
