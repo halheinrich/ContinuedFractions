@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Numerics;
 
-namespace ContinuedFractions.Generators;
+namespace HalHeinrich.Numerics.ContinuedFractions.Generators;
 
 /// <summary>
 /// A typed source of continued-fraction partial quotients

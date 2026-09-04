@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace ContinuedFractions;
+namespace HalHeinrich.Numerics.ContinuedFractions;
 
 /// <summary>
 /// Identifies a continued fraction as a quadratic irrational of the form

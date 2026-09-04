@@ -1,8 +1,8 @@
 using System.Numerics;
-using ContinuedFractions.Generators;
+using HalHeinrich.Numerics.ContinuedFractions.Generators;
 using HalHeinrich.Numerics;
 
-namespace ContinuedFractions.Tests;
+namespace HalHeinrich.Numerics.ContinuedFractions.Tests;
 
 public class ContinuedFractionConvergentTests
 {

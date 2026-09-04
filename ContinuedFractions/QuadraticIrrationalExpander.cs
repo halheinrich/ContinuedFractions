@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace ContinuedFractions;
+namespace HalHeinrich.Numerics.ContinuedFractions;
 
 /// <summary>
 /// Runs Lagrange's algorithm to produce the continued-fraction expansion

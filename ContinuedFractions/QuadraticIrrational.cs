@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Numerics;
 
-namespace ContinuedFractions;
+namespace HalHeinrich.Numerics.ContinuedFractions;
 
 /// <summary>
 /// A quadratic irrational expressed in canonical form

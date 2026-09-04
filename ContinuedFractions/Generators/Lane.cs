@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Numerics;
 
-namespace ContinuedFractions.Generators;
+namespace HalHeinrich.Numerics.ContinuedFractions.Generators;
 
 /// <summary>
 /// A single lane in a <see cref="PatternCFCoefficientGenerator"/>'s

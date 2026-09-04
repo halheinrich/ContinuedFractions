@@ -1,8 +1,8 @@
 using System.Numerics;
-using ContinuedFractions.Generators;
+using HalHeinrich.Numerics.ContinuedFractions.Generators;
 using Xunit.Abstractions;
 
-namespace ContinuedFractions.Tests;
+namespace HalHeinrich.Numerics.ContinuedFractions.Tests;
 
 /// <summary>
 /// Demonstrates the harness pattern: a set of continued fractions

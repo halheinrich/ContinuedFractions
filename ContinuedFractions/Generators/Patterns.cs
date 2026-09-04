@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace ContinuedFractions.Generators;
+namespace HalHeinrich.Numerics.ContinuedFractions.Generators;
 
 /// <summary>
 /// Factory methods that produce <see cref="PatternCFCoefficientGenerator"/>

@@ -1,9 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <RootNamespace>HalHeinrich.Numerics.ContinuedFractions</RootNamespace>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="HalHeinrich.Numerics.BigRational" Version="0.1.0-preview1" />
   </ItemGroup>
 
+  <!--
+    Assembly name, not namespace: the test project is still assembled as
+    ContinuedFractions.Tests, and the namespace rooting did not rename it.
+  -->
   <ItemGroup>
     <InternalsVisibleTo Include="ContinuedFractions.Tests" />
   </ItemGroup>

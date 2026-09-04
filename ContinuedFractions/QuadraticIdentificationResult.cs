@@ -1,4 +1,4 @@
-namespace ContinuedFractions;
+namespace HalHeinrich.Numerics.ContinuedFractions;
 
 /// <summary>
 /// The structured outcome of an attempt by a

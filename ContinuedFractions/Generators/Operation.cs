@@ -1,4 +1,4 @@
-namespace ContinuedFractions.Generators;
+namespace HalHeinrich.Numerics.ContinuedFractions.Generators;
 
 /// <summary>
 /// The rule by which a <see cref="Lane"/> evolves its emitted value

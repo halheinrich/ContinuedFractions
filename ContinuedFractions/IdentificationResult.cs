@@ -1,4 +1,4 @@
-namespace ContinuedFractions;
+namespace HalHeinrich.Numerics.ContinuedFractions;
 
 /// <summary>
 /// The outcome of an attempt by a <see cref="CFIdentifier"/> to identify

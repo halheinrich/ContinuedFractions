@@ -1,10 +1,10 @@
 using System.Collections;
 using System.Globalization;
 using System.Numerics;
-using ContinuedFractions.Generators;
+using HalHeinrich.Numerics.ContinuedFractions.Generators;
 using HalHeinrich.Numerics;
 
-namespace ContinuedFractions;
+namespace HalHeinrich.Numerics.ContinuedFractions;
 
 /// <summary>
 /// A simple continued fraction <c>[a0; a1, a2, ...]</c> where <c>a0</c> is

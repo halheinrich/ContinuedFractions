@@ -1,7 +1,7 @@
 using System.Numerics;
-using ContinuedFractions.Generators;
+using HalHeinrich.Numerics.ContinuedFractions.Generators;
 
-namespace ContinuedFractions.Tests;
+namespace HalHeinrich.Numerics.ContinuedFractions.Tests;
 
 public class EFamilyShapeIdentifierTests
 {

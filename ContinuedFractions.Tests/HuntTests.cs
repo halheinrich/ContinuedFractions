@@ -2,10 +2,10 @@ using System.Globalization;
 using System.IO;
 using System.Numerics;
 using System.Text;
-using ContinuedFractions.Generators;
+using HalHeinrich.Numerics.ContinuedFractions.Generators;
 using Xunit.Abstractions;
 
-namespace ContinuedFractions.Tests;
+namespace HalHeinrich.Numerics.ContinuedFractions.Tests;
 
 /// <summary>
 /// Discovery-style tests: enumerate <see cref="PatternCFCoefficientGenerator"/>

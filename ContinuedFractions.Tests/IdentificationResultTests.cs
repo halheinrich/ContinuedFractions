@@ -1,4 +1,4 @@
-namespace ContinuedFractions.Tests;
+namespace HalHeinrich.Numerics.ContinuedFractions.Tests;
 
 public class IdentificationResultTests
 {

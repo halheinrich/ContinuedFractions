@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Numerics;
 
-namespace ContinuedFractions.Generators;
+namespace HalHeinrich.Numerics.ContinuedFractions.Generators;
 
 /// <summary>
 /// A continued-fraction coefficient generator built from a pre-period

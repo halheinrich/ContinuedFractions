@@ -1,8 +1,8 @@
 using System.Globalization;
 using System.Numerics;
-using ContinuedFractions.Generators;
+using HalHeinrich.Numerics.ContinuedFractions.Generators;
 
-namespace ContinuedFractions;
+namespace HalHeinrich.Numerics.ContinuedFractions;
 
 /// <summary>
 /// Identifies a continued fraction as a member of one of the patterned

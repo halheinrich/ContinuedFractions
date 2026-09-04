@@ -1,4 +1,4 @@
-namespace ContinuedFractions;
+namespace HalHeinrich.Numerics.ContinuedFractions;
 
 /// <summary>
 /// A strategy for identifying a continued fraction as belonging to a

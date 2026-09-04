@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace ContinuedFractions;
+namespace HalHeinrich.Numerics.ContinuedFractions;
 
 /// <summary>
 /// Rounding mode for <see cref="IntegerMath.Sqrt(BigInteger, IntegerSqrtRounding)"/>.
