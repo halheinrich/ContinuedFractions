@@ -3,10 +3,7 @@
   "dependencies": {
     "net10.0": {
       "HalHeinrich.Numerics.BigRational": {
-        "type": "Direct",
-        "requested": "[0.1.0-preview1, )",
-        "resolved": "0.1.0-preview1",
-        "contentHash": "e/RRrcJT0WMSSf0esBQl7QHEzRPdInvlnDyedRRBCxzQOuTXfC7C/zE12mIp35x49nEuolvKNp4/Dgxw2eh37w=="
+        "type": "Project"
       }
     }
   }

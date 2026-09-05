@@ -4,8 +4,14 @@
     <RootNamespace>HalHeinrich.Numerics.ContinuedFractions</RootNamespace>
   </PropertyGroup>
 
+  <!--
+    BigRational by ProjectReference, per the umbrella's ruling on intra-umbrella
+    edges. The path escapes this repository: it resolves only when this checkout
+    sits beside a BigRationalLibrary checkout, as it does inside the umbrella.
+    See README.md - Building.
+  -->
   <ItemGroup>
-    <PackageReference Include="HalHeinrich.Numerics.BigRational" Version="0.1.0-preview1" />
+    <ProjectReference Include="..\..\BigRationalLibrary\BigRationalLibrary\BigRationalLibrary.csproj" />
   </ItemGroup>
 
   <!--

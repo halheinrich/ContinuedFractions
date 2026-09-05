@@ -51,24 +51,23 @@
     its own promise. Removing the condition makes the promise this file's own,
     which is the reason to prefer it over waiting for a workflow to carry it.
 
-    What it buys here is more than it buys anywhere else in this project. This
-    member consumes BigRational by PackageReference at 0.1.0-preview1, so the
-    library's lock records it as "type": "Direct" with a requested range and a
-    resolved version, which is exactly what locked mode compares. Every other
-    member takes BigRational by ProjectReference, and locked mode does not
-    compare a version arriving that way (halheinrich/Math#44), so their locks
-    can go stale on that edge while restore still passes. Here they cannot,
-    and the guarantee reaches both projects: the test project's lock carries
-    the same constraint on its "type": "Project" edge to the library, because
-    the edge underneath is a package one, so bumping the version fails the
-    restore of both. That is measured, not inferred.
+    What it guards here is now what it guards everywhere else, and what it no
+    longer guards is recorded because the loss looks worse than it is. Until
+    migration step 7 (halheinrich/Math#10) this member took BigRational by
+    PackageReference, so the lock recorded that edge as "type": "Direct" with a
+    requested range and a resolved version — exactly what locked mode compares
+    — and this was the one member where the gate reached it. The edge is a
+    ProjectReference now, and halheinrich/Math#44 measured what that costs: a
+    project-edge constraint is written into the lock and never read, so an
+    impossible range on it passes restore in silence. The protection and the
+    hazard left together, though, because a path reference carries no version
+    to drift. Nobody should read this as a regression, or write a mechanism to
+    guard it.
 
-    That advantage is temporary and its expiry is scheduled. Migration step 7,
-    folded into halheinrich/Math#10, converts this member to a
-    ProjectReference; the BigRational edge stops being compared at that moment
-    and this member inherits the exposure halheinrich/Math#44 describes, like
-    the rest. Whoever makes that conversion is giving this up, and should know
-    it is part of the price.
+    The library project consequently carries no PackageReference at all. What
+    this file still enforces is the test project's tooling graph — xunit, the
+    test SDK, its VS runner and coverlet — where a version genuinely can move
+    and locked mode genuinely compares it.
 
     Accepted cost: a deliberate package change now fails the restore with
     NU1004 instead of quietly rewriting the lock. Recover with

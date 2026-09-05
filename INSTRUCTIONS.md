@@ -31,11 +31,9 @@ framework and namespace conventions are umbrella-wide and live in
   satisfy `p_n·q_{n-1} − p_{n-1}·q_n = ±1`, so every `p_n / q_n` is already in
   lowest terms.
 
-  By **`PackageReference`** at `0.1.0-preview1`, which is why this repository
-  **builds standalone today** and its siblings do not. That is a property about
-  to change: halheinrich/Math#10 converts the edge to a `ProjectReference`
-  escaping the repo, so a clone of this repository alone will stop restoring.
-  See § Pitfalls.
+  By **`ProjectReference`**, like every sibling, since halheinrich/Math#10
+  carried migration step 7's first half. The path escapes the repo, so a clone
+  of this repository alone cannot restore. See § Pitfalls.
 
 ## Layout
 
@@ -397,13 +395,13 @@ an undefined rounding mode.
   file lands correctly by default; the `InternalsVisibleTo` still reads
   `ContinuedFractions.Tests` because that is an assembly name and assemblies
   were not renamed.
-- **This repository builds standalone and is about to stop.** The
-  `PackageReference` to `HalHeinrich.Numerics.BigRational` at `0.1.0-preview1`
-  is why a clone of this repo alone restores today, unlike every sibling.
-  halheinrich/Math#10 converts it to a `ProjectReference` escaping the
-  repository, which resolves only beside a `BigRationalLibrary` checkout. Do
-  not write anything — a workflow, a README claim — that depends on the current
-  behaviour without knowing it has an expiry date.
+- **This repository does not build standalone.** Its `ProjectReference` to
+  `BigRationalLibrary` escapes the repository and resolves only beside a
+  `BigRationalLibrary` checkout, as inside the umbrella. Restore fails, not
+  compile, so the error names a missing project rather than a missing type.
+  This was not always so — the edge was a `PackageReference` at
+  `0.1.0-preview1` until halheinrich/Math#10 — so treat any surviving claim
+  that a clone of this repo restores on its own as stale.
 - **`nuget.config` here is the umbrella's only correct
   `packageSourceMapping`.** It declares the `github` source *and* maps
   `HalHeinrich.*` to it, which is what makes the dependency-confusion defence
@@ -418,10 +416,11 @@ an undefined rounding mode.
   rewritten lock. Recover with `dotnet restore -p:RestoreForceEvaluate=true`
   and commit the regenerated file — and note that NuGet writes it with CRLF
   while `.gitattributes` pins it to LF, so `git status` will then report a
-  change `git diff` cannot show. Because BigRational arrives here as a
-  `PackageReference`, this member is the one whose lock genuinely guards that
-  edge; halheinrich/Math#10's conversion to a `ProjectReference` gives that up
-  (halheinrich/Math#44).
+  change `git diff` cannot show. It no longer guards the BigRational edge:
+  halheinrich/Math#10 made that a `ProjectReference`, and a project-edge
+  constraint is written into the lock and never read (halheinrich/Math#44). The
+  hazard went with the protection, since a path reference has no version to
+  drift. What the lock still guards is the test project's tooling graph.
 - **`.gitattributes` pins `*.cs` to `eol=crlf`**, and that bites mechanical
   edits. A tool that rewrites a source file with LF endings leaves a working
   tree disagreeing with what checkout produces — git normalises on staging, so
