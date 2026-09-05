@@ -410,11 +410,18 @@ an undefined rounding mode.
   its comment describes real. The other members inherited the comment without
   the source, which is halheinrich/Math#30 — *their* defect, not this file's.
   Change nothing here to match them.
-- **`RestoreLockedMode` never engages.** `Directory.Build.props` gates it on
-  `ContinuousIntegrationBuild`, and this repository has no workflow to pass it,
-  so the committed `packages.lock.json` files are honoured by convention only
-  (halheinrich/Math#29). A package added without regenerating the lock file
-  will restore happily and nothing will object.
+- **`RestoreLockedMode` is unconditional, so a deliberate package change fails
+  the restore.** It used to be gated on `ContinuousIntegrationBuild`, which
+  nothing here sets and no workflow has ever existed to set, so the lock files
+  were honoured by convention only (halheinrich/Math#29). They are enforced
+  now: changing a version in a `.csproj` gives `NU1004` rather than a quietly
+  rewritten lock. Recover with `dotnet restore -p:RestoreForceEvaluate=true`
+  and commit the regenerated file — and note that NuGet writes it with CRLF
+  while `.gitattributes` pins it to LF, so `git status` will then report a
+  change `git diff` cannot show. Because BigRational arrives here as a
+  `PackageReference`, this member is the one whose lock genuinely guards that
+  edge; halheinrich/Math#10's conversion to a `ProjectReference` gives that up
+  (halheinrich/Math#44).
 - **`.gitattributes` pins `*.cs` to `eol=crlf`**, and that bites mechanical
   edits. A tool that rewrites a source file with LF endings leaves a working
   tree disagreeing with what checkout produces — git normalises on staging, so
