@@ -402,12 +402,16 @@ an undefined rounding mode.
   This was not always so — the edge was a `PackageReference` at
   `0.1.0-preview1` until halheinrich/Math#10 — so treat any surviving claim
   that a clone of this repo restores on its own as stale.
-- **`nuget.config` here is the umbrella's only correct
-  `packageSourceMapping`.** It declares the `github` source *and* maps
-  `HalHeinrich.*` to it, which is what makes the dependency-confusion defence
-  its comment describes real. The other members inherited the comment without
-  the source, which is halheinrich/Math#30 — *their* defect, not this file's.
-  Change nothing here to match them.
+- **`nuget.config` declares one source and no `packageSourceMapping`**, which
+  is `Collatz`'s shape and no longer the exception this file used to be. It
+  held the umbrella's one correct mapping while BigRational arrived as a
+  package — the `github` source *and* `HalHeinrich.*` mapped to it — and
+  halheinrich/Math#10 removed the source, the mapping and the
+  `%GITHUB_PACKAGES_PAT%` credentials block together. Do not add a `*`
+  mapping back: with one source it is inert, and on the day a second is added
+  it would exclude that source from every package (halheinrich/Math#30). The
+  file's own comment says what to write instead if a `HalHeinrich.*` package
+  is ever referenced here again.
 - **`RestoreLockedMode` is unconditional, so a deliberate package change fails
   the restore.** It used to be gated on `ContinuousIntegrationBuild`, which
   nothing here sets and no workflow has ever existed to set, so the lock files
