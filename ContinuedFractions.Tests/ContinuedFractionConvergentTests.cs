@@ -1,6 +1,5 @@
 using System.Numerics;
 using HalHeinrich.Numerics.ContinuedFractions.Generators;
-using HalHeinrich.Numerics;
 
 namespace HalHeinrich.Numerics.ContinuedFractions.Tests;
 

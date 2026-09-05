@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.IO;
 using System.Numerics;
 using System.Text;
 using HalHeinrich.Numerics.ContinuedFractions.Generators;
