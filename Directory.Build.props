@@ -36,6 +36,57 @@
   </PropertyGroup>
 
   <!--
+    Every ProjectReference builds in the configuration its consumer was
+    asked for. halheinrich/Math#47.
+
+    Without this, a Release build of this member links the *Debug*
+    BigRationalLibrary, and every "0 warnings in Release" and "passes in
+    Release" ever recorded here was measured against a Debug producer.
+    Measured in this member, all four rows a solution build at
+    `-c Release -t:Rebuild`, producer identified by content hash (its
+    Release is 8dc523aee5947338, its Debug 2eb25db84fa69872):
+
+      1  pristine                                    2eb25db8  Debug
+      2  ItemDefinitionGroup with SetConfiguration    2eb25db8  Debug
+      3  that ItemDefinitionGroup plus this property  8dc523ae  Release
+      4  this property alone                         8dc523ae  Release
+
+    Rows 3 and 4 flip one thing and the effect reverses, so the metadata
+    approach that looks like the obvious fix is a no-op in the strongest
+    sense: it changes nothing, including the bug. It is applied correctly
+    at evaluation and then overwritten at build. In
+    Microsoft.Common.CurrentVersion.targets on SDK 10.0.400, line 1584
+    defaults ShouldUnsetParentConfigurationAndPlatform to true whenever
+    BuildingSolutionFile or BuildingInsideVisualStudio is set, and line
+    1609 hands it to the AssignProjectConfiguration task, whose job is
+    then to rewrite SetConfiguration on every reference absent from the
+    solution map, unsetting the parent's configuration so the referenced
+    project falls to its own default. A solution assigns a configuration
+    only to the projects it contains, and this one lists only its own two.
+
+    Line 1584's condition also names BuildingInsideVisualStudio, so this
+    was never confined to `dotnet build <solution>`: Release builds inside
+    Visual Studio linked the Debug producer too.
+
+    Flagged rather than quietly relied on. This overrides an MSBuild
+    default instead of working with it, and the property is not documented
+    public surface; it lives in the SDK's targets, which is where it was
+    read. The default exists so a solution configuration is not forced
+    onto a project that may not define it. Every member here defines
+    exactly Debug and Release with no platform variation, so the condition
+    the default guards against does not arise. If that ever changes, this
+    is the decision to revisit.
+
+    Preferred over listing BigRationalLibrary in this member's solution,
+    which also works: membership scales with dependency depth, has to be
+    re-established every time the graph grows, and when incomplete it
+    fails silently, restoring exactly this bug with exactly this symptom.
+  -->
+  <PropertyGroup>
+    <ShouldUnsetParentConfigurationAndPlatform>false</ShouldUnsetParentConfigurationAndPlatform>
+  </PropertyGroup>
+
+  <!--
     Lock-file based version pinning. The lock file (packages.lock.json)
     captures exactly the resolved package versions and is committed to git,
     so any clone restores the same dependency graph. RestoreLockedMode fails
