@@ -22,14 +22,19 @@ framework and namespace conventions are umbrella-wide and live in
 
 ## Depends on
 
-- **BigRationalLibrary** — `HalHeinrich.Numerics.BigRational`, and **the edge
-  is one constructor wide**. The library uses `BigRational` as the convergent
-  type and calls `new BigRational(BigInteger, BigInteger)` at exactly one site,
-  in `ContinuedFraction.EnsureComputedThrough`. Nothing else in the library
+- **BigRationalLibrary** — `HalHeinrich.Numerics.BigRational`, and **the
+  rational half of the edge is one constructor wide**. The library uses
+  `BigRational` as the convergent type and calls
+  `new BigRational(BigInteger, BigInteger)` at exactly one site, in
+  `ContinuedFraction.EnsureComputedThrough`. Nothing else in the library
   touches it; the tests additionally rely on its value equality to assert
   convergents. Reduction is a no-op at that call site — consecutive convergents
   satisfy `p_n·q_{n-1} − p_{n-1}·q_n = ±1`, so every `p_n / q_n` is already in
   lowest terms.
+
+  The other half is **`IntegerMath.Sqrt`**, called once in
+  `QuadraticIrrationalExpander`. It lived here until halheinrich/Math#10 moved
+  it to its proper home; see § Pitfalls for why no `using` marks the change.
 
   By **`ProjectReference`**, like every sibling, since halheinrich/Math#10
   carried migration step 7's first half. The path escapes the repo, so a clone
@@ -182,18 +187,6 @@ decoration: it is exactly what keeps Lagrange's recurrence in integers at every
 step. Signed `P` is what makes the form total — `P = 0` gives plain roots,
 `P > 0` gives `(√7 − 2)/3`, `P < 0` gives `φ`.
 
-### `IntegerMath` — a primitive that is only visiting
-
-`IntegerMath.Sqrt` is an exact integer square root with `Floor` / `Ceiling` /
-`Nearest` rounding, computed by Newton-Raphson in `BigInteger` with **no
-floating-point intermediate**. `Nearest` has no tie-break because it needs
-none: for non-square `n`, `√n` is irrational, so the midpoint between two
-consecutive integers is never attained.
-
-It is a general-purpose numeric primitive sitting in a discovery bench, which
-is halheinrich/Math#10 — it leaves for `BigRationalLibrary` with
-`IntegerSqrtRounding` and its tests. Do not build on it here.
-
 ## Public API
 
 Namespace `HalHeinrich.Numerics.ContinuedFractions`, with the generators in
@@ -323,15 +316,6 @@ public readonly record struct QuadraticIrrational
     public BigInteger P { get; }                 // offset, any sign
     public BigInteger Q { get; }                 // denominator, >= 1
 }
-
-public enum IntegerSqrtRounding { Floor, Ceiling, Nearest }
-
-public static class IntegerMath
-{
-    public static BigInteger Sqrt(
-        BigInteger value,
-        IntegerSqrtRounding rounding = IntegerSqrtRounding.Floor);
-}
 ```
 
 Both identifier constructors throw `ArgumentOutOfRangeException` on a
@@ -339,8 +323,6 @@ non-positive budget. `QuadraticIrrational`'s constructor throws
 `ArgumentOutOfRangeException` on a negative `d` or non-positive `q`, and
 `ArgumentException` when `q` does not divide `d − p²`; its `default` value
 violates `Q ≥ 1` and is an invalid sentinel rather than a meaningful value.
-`IntegerMath.Sqrt` throws `ArgumentOutOfRangeException` on a negative input or
-an undefined rounding mode.
 
 ## Pitfalls
 
@@ -382,10 +364,13 @@ an undefined rounding mode.
   the rational `1`. Anything that assumes an infinite periodic expansion must
   check; `QuadraticIrrationalExpander` returns an empty period for that case
   and `QuadraticIrrationalIdentifier` skips it.
-- **`IntegerMath` and `IntegerSqrtRounding` are leaving** for
-  `BigRationalLibrary` under halheinrich/Math#10, together with their tests and
-  their current callers' expectations. Do not grow them here, and do not add a
-  second caller that would have to be migrated too.
+- **`IntegerMath` and `IntegerSqrtRounding` belong to `BigRationalLibrary`
+  now**, at `HalHeinrich.Numerics` (halheinrich/Math#10). No `using` marks the
+  move and none is needed: this repository's namespaces are rooted at
+  `HalHeinrich.Numerics.ContinuedFractions`, so the declaring namespace
+  encloses every call site and the name resolves outward. A `using
+  HalHeinrich.Numerics;` added here for them would be redundant. Grow the
+  primitive in its own repository, not by reintroducing a copy.
 - **Namespaces are rooted at `HalHeinrich.Numerics.ContinuedFractions`** — the
   sub-namespace, not the flat root the shared machinery uses. `BigRational` and
   `RationalApproximation` sit at `HalHeinrich.Numerics` because they *are* the
@@ -434,9 +419,12 @@ an undefined rounding mode.
 
 ## Subproject-internal next steps
 
-The backlog lives in the umbrella tracker rather than here: halheinrich/Math#10
-takes `IntegerMath` out and converts the BigRational edge in the same arc, and
-§ Pitfalls above says what each open item costs a reader today.
+The backlog lives in the umbrella tracker rather than here. halheinrich/Math#10
+is done — it took `IntegerMath` out and converted the BigRational edge in the
+same arc — and halheinrich/Math#11, the namespace rename, was deliberately held
+out of it so the rename would not land on top of an edge conversion and a
+primitive move. § Pitfalls above says what each open item costs a reader
+today.
 
 The one question this repository owns and has not answered is the
 controls-versus-experiments split — whether `HuntTests` becomes a
@@ -444,5 +432,7 @@ controls-versus-experiments split — whether `HuntTests` becomes a
 filed, because the decision is worth taking against a real workflow rather than
 in the abstract, and this member has none yet.
 
-Cross-cutting items — the build-and-test workflow this member still lacks, and
-the lock-file gate that stays dormant without it — are `../INSTRUCTIONS.md`'s.
+The cross-cutting item — the build-and-test workflow this member still lacks —
+is `../INSTRUCTIONS.md`'s. It is not what gates the lock files: that was true
+while `RestoreLockedMode` was conditional on `ContinuousIntegrationBuild`, and
+halheinrich/Math#29 removed the condition, as § Pitfalls above records.
