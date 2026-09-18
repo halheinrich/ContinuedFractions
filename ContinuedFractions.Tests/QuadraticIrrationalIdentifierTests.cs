@@ -214,6 +214,32 @@ public class QuadraticIrrationalIdentifierTests
         Assert.Equal(new QuadraticIrrational(11, 0, 1), result.Value);
     }
 
+    [Fact]
+    public void TryIdentify_DefaultBudgetReachesSqrt22ButNotSqrt23()
+    {
+        // Pins the reach the remarks on
+        // QuadraticIrrationalIdentifier.DefaultMaxTriples state: plain √n
+        // is identified for every non-square n up to 22 and for none from
+        // 23 on. A budget change that moves the reach fails here first.
+        // Both CFs are written out rather than generated, so the pin does
+        // not depend on the library's own expander.
+        var identifier = new QuadraticIrrationalIdentifier();
+
+        // CF of √22 = [4; 1, 2, 4, 2, 1, 8, …]
+        var sqrt22 = identifier.TryIdentifyQuadratic(new(new PatternCFCoefficientGenerator(
+            new BigInteger[] { 4 },
+            new[] { Lane.Const(1), Lane.Const(2), Lane.Const(4), Lane.Const(2), Lane.Const(1), Lane.Const(8) })));
+
+        // CF of √23 = [4; 1, 3, 1, 8, …]
+        var sqrt23 = identifier.TryIdentifyQuadratic(new(new PatternCFCoefficientGenerator(
+            new BigInteger[] { 4 },
+            new[] { Lane.Const(1), Lane.Const(3), Lane.Const(1), Lane.Const(8) })));
+
+        Assert.True(sqrt22.Match);
+        Assert.Equal(new QuadraticIrrational(22, 0, 1), sqrt22.Value);
+        Assert.False(sqrt23.Match);
+    }
+
     // ---------- sweep across constant CFs ----------
 
     [Fact]
