@@ -352,8 +352,11 @@ violates `Q ≥ 1` and is an invalid sentinel rather than a meaningful value.
   has already been emitted, so **the default identifies `√n` up to `n = 22` and
   cannot reach `√23` at all** (measured 2026-09-03: every non-square `n` from 2
   to 30 through the public surface, matching from 2 to 22 and failing from 23
-  on). Reporting an unmatched candidate as "not quadratic" turns a budget into
-  a proof.
+  on). `TryIdentify_DefaultBudgetReachesSqrt22ButNotSqrt23` in
+  `ContinuedFractions.Tests/QuadraticIrrationalIdentifierTests.cs` now pins
+  that reach from both sides, so a budget change that moves it fails there.
+  Reporting an unmatched candidate as "not quadratic" turns a budget into a
+  proof.
 - **`EFamilyShapeIdentifier` returns early on short finite CFs**, before any
   recogniser runs, with a depth of `max(len − 1, 0)`. That is correct — a
   finite CF is rational and no shape can match it — but the returned depth
