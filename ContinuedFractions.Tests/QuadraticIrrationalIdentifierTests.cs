@@ -193,10 +193,9 @@ public class QuadraticIrrationalIdentifierTests
     [Fact]
     public void TryIdentify_TightTripleBudgetMissesLargerD()
     {
-        // √11 needs the (11, 0, 1) triple, which sits at the start of
-        // level 11's square-root sweep — position ~1111 in the
-        // enumeration. With maxTriples = 5 we cover only level 1 and
-        // most of level 2; far short of level 11.
+        // √11 needs the (11, 0, 1) triple, from level 11's square-root
+        // sweep. With maxTriples = 5 the enumeration does not get past
+        // level 2; far short of level 11.
         var result = new QuadraticIrrationalIdentifier(maxTriples: 5).TryIdentify(Sqrt11Cf());
 
         Assert.False(result.Match);
@@ -205,8 +204,9 @@ public class QuadraticIrrationalIdentifierTests
     [Fact]
     public void TryIdentify_AdequateBudgetFindsLargerD()
     {
-        // Default budget covers up through level ~21, so √11
-        // (at position ~1111) is well within reach.
+        // √11's triple (11, 0, 1) lies in level 11, well inside the
+        // default budget's reach; the remarks on
+        // QuadraticIrrationalIdentifier.DefaultMaxTriples state that reach.
         var result = new QuadraticIrrationalIdentifier()
             .TryIdentifyQuadratic(Sqrt11Cf());
 

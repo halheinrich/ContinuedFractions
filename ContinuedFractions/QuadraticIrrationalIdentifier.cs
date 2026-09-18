@@ -60,11 +60,14 @@ public sealed class QuadraticIrrationalIdentifier : CFIdentifier
 {
     /// <summary>Default cap on candidate triples evaluated.</summary>
     /// <remarks>
-    /// Sized to comfortably reach the square-root sweep at level ~21,
-    /// covering plain <c>√n</c> for <c>n</c> up to ~21 and a substantial
-    /// portion of the general-triple space below that (with both signs
-    /// of <c>p</c>). Larger budgets trade evaluation time for broader
-    /// coverage.
+    /// Enumerates levels 1 through 21 in full, with both signs of
+    /// <c>p</c>, then level 22's square-root sweep, and runs out partway
+    /// through level 22's positive-<c>p</c> general sweep (levels and
+    /// sweeps as in the class remarks). Plain <c>√n</c> needs the triple
+    /// <c>(n, 0, 1)</c> from level <c>n</c>'s square-root sweep, so the
+    /// default identifies <c>√n</c> for every non-square <c>n</c> up to
+    /// 22 and cannot identify it for any <c>n</c> from 23 on. Larger
+    /// budgets trade evaluation time for broader coverage.
     /// </remarks>
     public const int DefaultMaxTriples = 20_000;
 
